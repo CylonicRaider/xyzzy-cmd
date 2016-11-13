@@ -8,6 +8,7 @@ ESCAPES = {"'": "'", '"': '"', '?': '?', '\\': '\\', 'a': '\a', 'b': '\b',
            'f': '\f', 'n': '\n', 'r': '\r', 't': '\t', 'v': '\v'}
 # Octals are up to three characters long and end at the first non-octal.
 # Hexadecimals can be arbitrarily long. Unicode ones are left out.
+REVESCAPES = {v: k for k, v in ESCAPES.items()}
 
 TMPL_TOKEN = re.compile(r'(?P<ident>[a-zA-Z_][a-zA-Z0-9_]*)|(?P<op>=)|'
     r'(?P<str>"(?:[^"\\]|\\.)*")|(?P<end>;)|(?P<ignore>//.*$|\s+)')
@@ -16,12 +17,18 @@ SUCCESSORS = {'ident': ('op',), 'op': ('str',), 'str': ('str', 'end'),
 NAMES = {'ident': 'identifier', 'op': 'operator', 'str': 'string',
          'end': 'statement terminator'}
 
+PRINTABLE = re.compile(r'[ !#-.0-~]+')
+HEXDIGITS = re.compile(r'[0-9a-fA-F]')
+NONPRINTABLE = re.compile(r'[^ !#-.0-~]+')
+
 if sys.version_info[0] <= 2:
     tobytes = str
     bytechr = chr
+    tostr = str
 else:
     tobytes = lambda x: x.encode('utf-8')
     bytechr = lambda x: bytes([x])
+    tostr = lambda x: x.decode('utf-8')
 
 def parse_tmpl(inpt):
     pstate, name, value = None, None, None
@@ -45,7 +52,7 @@ def parse_tmpl(inpt):
                                  (linenum + 1))
             idx = m.end()
             # Determine token type
-            for ttype in ('ident', 'op', 'str', 'ignore'):
+            for ttype in ('ident', 'op', 'str', 'end', 'ignore'):
                 token = m.group(ttype)
                 if token: break
             else:
@@ -93,9 +100,38 @@ def parse_tmpl(inpt):
     if pstate not in (None, 'end'):
         raise ValueError('Unfinished statement at EOF')
 
+def encode_string(s):
+    idx, sl = 0, len(s)
+    can_hex, ret = True, ['"']
+    while idx < sl:
+        m = PRINTABLE.match(s, idx)
+        if m:
+            if not can_hex and HEXDIGITS.match(s, idx):
+                ret.append('""')
+                can_hex = True
+            ret.append(tostr(m.group()))
+            idx = m.end()
+        m = NONPRINTABLE.match(s, idx)
+        if not m: continue
+        idx = m.end()
+        for ch in m.group():
+            if ch in REVESCAPES:
+                ret.append('\\' + REVESCAPES[ch])
+                can_hex = True
+            else:
+                ret.append('\\x%02x' % ord(ch))
+                can_hex = False
+    ret.append('"')
+    return ''.join(ret)
+
 def main():
-    # Tokenizer test.
     for token in parse_tmpl(sys.stdin):
-        print (token)
+        if token[0] == 'prep':
+            sys.stdout.write(token[0] + '\n')
+        elif token[0] == 'string':
+            sys.stdout.write('%s = %s;\n' % (token[1],
+                encode_string(token[2])))
+        else:
+            raise SystemExit('Bad token type: %r' % token[0])
 
 if __name__ == '__main__': main()
