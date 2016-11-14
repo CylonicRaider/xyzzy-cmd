@@ -5,7 +5,7 @@ import sys, os, re, struct, subprocess
 
 ESCAPE_RE = re.compile(r'\\([0-7]{1,3}|x[0-9a-fA-F]{2,}|[^0-7x])')
 ESCAPES = {"'": "'", '"': '"', '?': '?', '\\': '\\', 'a': '\a', 'b': '\b',
-           'f': '\f', 'n': '\n', 'r': '\r', 't': '\t', 'v': '\v'}
+           'f': '\f', 'n': '\n', 'r': '\r', 't': '\t', 'v': '\v', '0': '\0'}
 # Octals are up to three characters long and end at the first non-octal.
 # Hexadecimals can be arbitrarily long. Unicode ones are left out.
 REVESCAPES = {v: k for k, v in ESCAPES.items()}
@@ -19,9 +19,9 @@ SUCCESSORS = {'ident': ('op',), 'op': ('str',), 'str': ('str', 'end'),
 NAMES = {'ident': 'identifier', 'op': 'operator', 'str': 'string',
          'end': 'statement terminator', 'comment': 'documentation comment'}
 
-PRINTABLE = re.compile(rb'[ !#-.0-~]+')
+PRINTABLE = re.compile(rb'[ !#-.0-\[\]~]+')
 HEXDIGITS = re.compile(rb'[0-9a-fA-F]')
-NONPRINTABLE = re.compile(rb'[^ !#-.0-~]+')
+NONPRINTABLE = re.compile(rb'[^ !#-.0-\[\]~]+')
 
 if sys.version_info[0] <= 2:
     tobytes = str

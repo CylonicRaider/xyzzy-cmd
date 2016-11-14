@@ -1,6 +1,6 @@
 
-#ifndef _STRINGS
-#define _STRINGS
+#ifndef _STRINGS_FTM
+#define _STRINGS_FTM
 
 #includehdr
 
