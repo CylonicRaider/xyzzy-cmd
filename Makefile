@@ -18,5 +18,9 @@ frobnicate: frobnicate.c Makefile
 frobnicate.o: frobnicate.c frobnicate.h Makefile
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+strings.h strings.c: strings.ftm frobnicate
+	./frobstrings.py -o strings.c -h strings.h strings.ftm || \
+	rm -f strings.h strings.c
+
 clean:
-	rm -rf *.o frobnicate
+	rm -rf strings.[ch] *.o frobnicate

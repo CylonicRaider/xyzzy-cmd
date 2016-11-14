@@ -1,0 +1,15 @@
+
+#ifndef _STRINGS
+#define _STRINGS
+
+#includehdr
+
+#listdecl frobstring
+
+/* Just a test */
+// This comment should be thrown out
+test42 = "test42";
+
+#listdef strings
+
+#endif
