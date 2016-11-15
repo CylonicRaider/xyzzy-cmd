@@ -1,6 +1,10 @@
 
-#ifndef _STRINGS_FTM
-#define _STRINGS_FTM
+#ifndef _STRINGS_FRS
+#define _STRINGS_FRS
+
+#include <inttypes.h>
+#keytype uint32_t
+#chartype uint8_t
 
 #includehdr
 

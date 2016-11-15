@@ -183,6 +183,7 @@ def main():
         hdrstream = open_file(hdrfile, 'w', sys.stdout)
     # State
     listtype, names = None, []
+    keytype, chartype = 'int', 'char'
     out_el, hdr_el = False, False
     # Spawn frobnication server
     proc = subprocess.Popen(['./frobnicate'], stdin=subprocess.PIPE,
@@ -206,8 +207,8 @@ def main():
                 elif listtype is not None:
                     raise SystemExit('Repeated listdecl pragma')
                 listtype = parts[1]
-                (hdrstream or outstream).write('struct %s { uint32_t *key; '
-                                               'uint8_t *str; };\n' % listtype)
+                (hdrstream or outstream).write('struct %s { %s *key; '
+                    '%s *str; };\n' % (listtype, keytype, chartype))
                 if hdrstream:
                     hdr_el = False
                 else:
@@ -239,6 +240,14 @@ def main():
                     else:
                         outstream.write('#include "%s"\n' % hdrfile)
                     out_el = False
+            elif parts and parts[0] == '#keytype':
+                if len(parts) != 2:
+                    raise SystemExit('Bad keytype pragma')
+                keytype = parts[1]
+            elif parts and parts[0] == '#chartype':
+                if len(parts) != 2:
+                    raise SystemExit('Bad chartype pragma')
+                chartype = parts[1]
             else:
                 (hdrstream or outstream).write(token[1] + '\n')
                 if hdrstream:
@@ -251,11 +260,10 @@ def main():
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
-                hdrstream.write('uint32_t %s_key;\n'
-                                'uint8_t %s[];\n' % (n, n))
-            outstream.write('uint32_t %s_key = 0x%x;\n'
-                            'uint8_t %s[] = %s;\n' % (n, nk, n,
-                            encode_string(ns)))
+                hdrstream.write('%s %s_key;\n%s %s[];\n' % (keytype, n,
+                                                            chartype, n))
+            outstream.write('%s %s_key = 0x%x;\n%s %s[] = %s;\n' % (keytype,
+                            n, nk, chartype, n, encode_string(ns)))
             names.append(n)
             hdr_el = out_el = False
         else:
