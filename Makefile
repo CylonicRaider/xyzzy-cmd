@@ -11,6 +11,8 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
     $(KLIBC)/lib/crt0.o -lc
 
 .PHONY: clean
+# Implicit rules create a cyclic dependency between %.frs and %.frs.c.
+.SUFFIXES:
 
 frobnicate: frobnicate.c Makefile
 	$(LD) -DFROBNICATE_STANDALONE -o $@ $< $(CFLAGS) $(LDFLAGS)
@@ -18,9 +20,9 @@ frobnicate: frobnicate.c Makefile
 frobnicate.o: frobnicate.c frobnicate.h Makefile
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-strings.h strings.c: strings.ftm frobnicate
-	./frobstrings.py -o strings.c -h strings.h strings.ftm || \
-	rm -f strings.h strings.c
+%.frs.h %.frs.c: %.frs frobnicate
+	./frobstrings.py -o $*.frs.c -h $*.frs.h $*.frs || \
+	rm -f $*.frs.h $*.frs.c
 
 clean:
-	rm -rf strings.[ch] *.o frobnicate
+	rm -rf *.frs.[ch] *.o frobnicate
