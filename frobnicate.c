@@ -16,18 +16,20 @@ static inline void frobrnd(uint32_t *state) {
 
 /* Scramble the given string */
 void frob(uint32_t key, uchar const* src, uchar *dest) {
+    uchar in;
     do {
-        key ^= *src << 16;
+        in = *src++;
+        key ^= in << 16;
         *dest++ = key >> 16;
         frobrnd(&key);
-    } while (*src++);
+    } while (in);
 }
 
 /* Descramble the given string */
 void defrob(uint32_t key, uchar const* src, uchar *dest) {
     do {
-        key ^= *src++ << 16;
-        *dest++ = key >> 16;
+        *dest = (key >> 16) ^ *src++;
+        key ^= *dest << 16;
         frobrnd(&key);
     } while (*dest++);
 }

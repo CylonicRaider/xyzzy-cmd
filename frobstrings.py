@@ -258,6 +258,9 @@ def main():
         elif token[0] == 'string':
             n, s = token[1], token[2]
             k = struct.unpack('!I', os.urandom(4))[0]
+            if b'\0' in s:
+                raise SystemExit('String literal contains null byte: %r' % s)
+            s += b'\0'
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
