@@ -14,15 +14,22 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
 # Implicit rules create a cyclic dependency between %.frs and %.frs.c.
 .SUFFIXES:
 
-frobnicate: frobnicate.c Makefile
-	$(LD) -DFROBNICATE_STANDALONE -o $@ $< $(CFLAGS) $(LDFLAGS)
-
-frobnicate.o: frobnicate.c frobnicate.h Makefile
+%.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-%.frs.h %.frs.c: %.frs frobnicate
+xyzzy-full: xyzzy.o frobnicate.o strings.frs.o
+	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+frobnicate: frobnicate.c
+	$(LD) -DFROBNICATE_STANDALONE -o $@ $< $(CFLAGS) $(LDFLAGS)
+
+xyzzy.o: xyzzy.c frobnicate.h strings.frs.h
+frobnicate.o: frobnicate.c frobnicate.h
+strings.frs.o: strings.frs.c
+
+%.frs.h %.frs.c: %.frs frobnicate frobstrings.py
 	./frobstrings.py -o $*.frs.c -h $*.frs.h $*.frs || \
 	rm -f $*.frs.h $*.frs.c
 
 clean:
-	rm -rf *.frs.[ch] *.o frobnicate
+	rm -rf *.frs.[ch] *.o frobnicate xyzzy-full

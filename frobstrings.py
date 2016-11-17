@@ -87,8 +87,9 @@ def parse_tmpl(inpt):
                         try:
                             value.append(bytechr(int(p, 8)))
                         except ValueError:
-                            raise ValueError('Bad octal escape (see line %s; '
-                                'escape \\%s)' % (linenum + 1, p))
+                            raise ValueError('Bad octal escape '
+                                '(see line %s; escape \\%s)' %
+                                (linenum + 1, p))
                     elif p.startswith('x'):
                         try:
                             value.append(bytechr(int(p[1:], 16)))
@@ -219,12 +220,12 @@ def main():
                 elif listtype is None:
                     raise SystemExit('listdef pragma without listdecl!')
                 if hdrstream:
-                    hdrstream.write('struct %s %s[];\n' % (listtype,
-                                                           parts[1]));
-                outstream.write('struct %s %s[] = {\n' % (listtype,
-                                                          parts[1]))
+                    hdrstream.write('struct %s %s[%s];\n' % (listtype,
+                        parts[1], len(names) + 1));
+                outstream.write('struct %s %s[%s] = {\n' % (listtype,
+                    parts[1], len(names) + 1))
                 for n in names:
-                    outstream.write('    { &%s_key, &%s },\n' % (n, n))
+                    outstream.write('    { &%s_key, %s },\n' % (n, n))
                 outstream.write('    { NULL, NULL }\n'
                                 '};\n')
                 out_el = hdr_el = False
@@ -260,10 +261,10 @@ def main():
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
-                hdrstream.write('%s %s_key;\n%s %s[];\n' % (keytype, n,
-                                                            chartype, n))
-            outstream.write('%s %s_key = 0x%x;\n%s %s[] = %s;\n' % (keytype,
-                            n, nk, chartype, n, encode_string(ns)))
+                hdrstream.write('%s %s_key;\n%s %s[%s];\n' % (keytype, n,
+                    chartype, n, len(s) + 1))
+            outstream.write('%s %s_key = 0x%x;\n%s %s[%s] = %s;\n' %
+                (keytype, n, nk, chartype, n, len(s) + 1, encode_string(ns)))
             names.append(n)
             hdr_el = out_el = False
         else:

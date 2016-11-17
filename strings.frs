@@ -10,9 +10,8 @@
 
 #listdecl frobstring
 
-/* Just a test */
-// This comment should be thrown out
-test42 = "test42";
+/* Test vector */
+hello = "Hello World!";
 
 #listdef strings
 
