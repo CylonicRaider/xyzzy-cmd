@@ -31,7 +31,7 @@ build/frobnicate-main.o: src/frobnicate-main.c src/frobnicate.c \
 build/strings.frs.o: autosrc/strings.frs.c autosrc/strings.frs.h
 
 build autosrc:
-	mkdir $@
+	mkdir -p $@
 
 build/%.o: src/%.c | build
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -41,7 +41,7 @@ build/%.o: autosrc/%.c | build
 autosrc/%.frs.h autosrc/%.frs.c: src/%.frs frobnicate script/frobstrings.py \
     | autosrc
 	script/frobstrings.py -o autosrc/$*.frs.c -h autosrc/$*.frs.h \
-	src/$*.frs || rm -f autosrc/$*.frs.h autosrc/$*.frs.c
+	src/$*.frs || { rm -f autosrc/$*.frs.h autosrc/$*.frs.c; false; }
 
 clean:
 	rm -rf build autosrc frobnicate xyzzy

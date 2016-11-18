@@ -32,6 +32,8 @@ else:
     bytechr = lambda x: bytes([x])
     tostr = lambda x: x.decode('utf-8')
 
+REVBINESCAPES = {tobytes(k): v for k, v in REVESCAPES.items()}
+
 def parse_tmpl(inpt):
     pstate, name, value = None, None, None
     for linenum, rawline in enumerate(inpt):
@@ -123,8 +125,8 @@ def encode_string(s):
         idx = m.end()
         for ch in m.group():
             if isinstance(ch, int): ch = bytechr(ch)
-            if ch in REVESCAPES:
-                ret.append('\\' + REVESCAPES[ch])
+            if ch in REVBINESCAPES:
+                ret.append('\\' + REVBINESCAPES[ch])
                 can_hex = True
             else:
                 ret.append('\\x%02x' % ord(ch))
@@ -248,6 +250,7 @@ def main():
                                                                     n[0]))
                     outstream.write('    { NULL, NULL }\n'
                                     '};\n')
+                listtype, name = None, []
                 out_el = hdr_el = False
             elif parts and parts[0] == '#includehdr':
                 if not 1 <= len(parts) <= 2:
@@ -284,14 +287,15 @@ def main():
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
-                if not listkeys:
+                if not listkeys or not listtype:
                     hdrstream.write('%s %s_key;\n'  % (keytype, n))
                 hdrstream.write('%s %s[%s];\n' % (chartype, n, len(s) + 1))
-            if not listkeys:
+            if not listkeys or not listtype:
                 outstream.write('%s %s_key = 0x%x;\n' % (keytype, n, nk))
             outstream.write('%s %s[%s] = %s;\n' % (chartype, n, len(s) + 1,
                                                    encode_string(ns)))
-            names.append((n, nk))
+            if listtype is not None:
+                names.append((n, nk))
             hdr_el = out_el = False
         else:
             raise SystemExit('Bad token type: %r' % token[0])
