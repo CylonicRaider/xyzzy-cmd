@@ -2,11 +2,12 @@
 KLIBC = /usr/lib/klibc
 CC = gcc
 LD = gcc
+STRIP = strip
 # The -iwithprefix apparently magically adds the GCC include directory
 # into the path.
 CFLAGS = -O2 -flto -Wall -D__KLIBC__ -D_BITSIZE=64 -iwithprefix include \
     -nostdinc -I$(KLIBC)/include/bits64 -I$(KLIBC)/include/arch/x86_64 \
-    -I$(KLIBC)/include
+    -I$(KLIBC)/include -Isrc -Iautosrc
 LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
     $(KLIBC)/lib/crt0.o -lc
 
@@ -14,22 +15,31 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
 # Implicit rules create a cyclic dependency between %.frs and %.frs.c.
 .SUFFIXES:
 
-%.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+xyzzy: build/xyzzy-full
+	$(STRIP) -sw -R '.note*' -R '.comment*' -o $@ $<
 
-xyzzy-full: xyzzy.o frobnicate.o strings.frs.o
-	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
-
-frobnicate: frobnicate.c
+frobnicate: src/frobnicate.c
 	$(LD) -DFROBNICATE_STANDALONE -o $@ $< $(CFLAGS) $(LDFLAGS)
 
-xyzzy.o: xyzzy.c frobnicate.h strings.frs.h
-frobnicate.o: frobnicate.c frobnicate.h
-strings.frs.o: strings.frs.c
+build/xyzzy-full: build/xyzzy.o build/frobnicate.o build/strings.frs.o
+	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-%.frs.h %.frs.c: %.frs frobnicate frobstrings.py
-	./frobstrings.py -o $*.frs.c -h $*.frs.h $*.frs || \
-	rm -f $*.frs.h $*.frs.c
+build/xyzzy.o: src/xyzzy.c src/frobnicate.h autosrc/strings.frs.h
+build/frobnicate.o: src/frobnicate.c src/frobnicate.h
+build/strings.frs.o: autosrc/strings.frs.c autosrc/strings.frs.h
+
+build autosrc:
+	mkdir $@
+
+build/%.o: src/%.c | build
+	$(CC) -c -o $@ $< $(CFLAGS)
+build/%.o: autosrc/%.c | build
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+autosrc/%.frs.h autosrc/%.frs.c: src/%.frs frobnicate script/frobstrings.py \
+| autosrc
+	script/frobstrings.py -o autosrc/$*.frs.c -h autosrc/$*.frs.h \
+	src/$*.frs || rm -f autosrc/$*.frs.h autosrc/$*.frs.c
 
 clean:
-	rm -rf *.frs.[ch] *.o frobnicate xyzzy-full
+	rm -rf build autosrc frobnicate xyzzy

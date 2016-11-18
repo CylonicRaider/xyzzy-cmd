@@ -1,6 +1,6 @@
 # Ignore build files
-*.o
-*.frs.[ch]
+/build/
+/autosrc/
 /frobnicate
-/xyzzy-full
+/xyzzy
 /TODO.txt

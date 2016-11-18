@@ -6,7 +6,7 @@
 #keytype uint32_t
 #chartype uint8_t
 
-#includehdr
+#includehdr ..
 
 #listkeys
 #listdecl frobstring
