@@ -284,10 +284,13 @@ def main():
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
-                hdrstream.write('%s %s_key;\n%s %s[%s];\n' % (keytype, n,
-                    chartype, n, len(s) + 1))
-            outstream.write('%s %s_key = 0x%x;\n%s %s[%s] = %s;\n' %
-                (keytype, n, nk, chartype, n, len(s) + 1, encode_string(ns)))
+                if not listkeys:
+                    hdrstream.write('%s %s_key;\n'  % (keytype, n))
+                hdrstream.write('%s %s[%s];\n' % (chartype, n, len(s) + 1))
+            if not listkeys:
+                outstream.write('%s %s_key = 0x%x;\n' % (keytype, n, nk))
+            outstream.write('%s %s[%s] = %s;\n' % (chartype, n, len(s) + 1,
+                                                   encode_string(ns)))
             names.append((n, nk))
             hdr_el = out_el = False
         else:
