@@ -8,8 +8,8 @@
 
 void init_strings() {
     struct frobstring *p;
-    for (p = strings; p->key != NULL; p++) {
-        defrob(*p->key, p->str, p->str);
+    for (p = strings; p->str != NULL; p++) {
+        defrob(p->key, p->str, p->str);
     }
 }
 

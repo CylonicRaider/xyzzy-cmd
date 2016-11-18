@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: ascii -*-
 
-import sys, os, re, struct, subprocess
+import sys, os, re, struct, ast, subprocess
 
 ESCAPE_RE = re.compile(r'\\([0-7]{1,3}|x[0-9a-fA-F]{2,}|[^0-7x])')
 ESCAPES = {"'": "'", '"': '"', '?': '?', '\\': '\\', 'a': '\a', 'b': '\b',
@@ -155,7 +155,7 @@ def main():
         for arg in it:
             if arg == '--help':
                 sys.stderr.write('USAGE: %s [--help] [-o outfile] '
-                                 '[-h hdrfile] [-l list] [infile]\n' %
+                                 '[-h hdrfile] [infile]\n' %
                                  sys.argv[0])
                 sys.stderr.write('If outfile or infile are "-" or missing, '
                                  'standard streams are used. If hdrfile '
@@ -163,7 +163,7 @@ def main():
                                  'omitted, no header file is written at '
                                  'all. If outfile and hdrfile are "-", '
                                  'a huge mess is the result.\n')
-                raise SystemExit()
+                raise SystemExit
             elif arg == '-o':
                 outfile = next(it)
             elif arg == '-h':
@@ -185,6 +185,7 @@ def main():
     # State
     listtype, names = None, []
     keytype, chartype = 'int', 'char'
+    listkeys = False
     out_el, hdr_el = False, False
     # Spawn frobnication server
     proc = subprocess.Popen(['./frobnicate'], stdin=subprocess.PIPE,
@@ -202,14 +203,25 @@ def main():
                 out_el = False
         elif token[0] == 'prep':
             parts = token[1].split()
-            if parts and parts[0] == '#listdecl':
+            if parts and parts[0] == '#listkeys':
+                if not 1 <= len(parts) <= 2:
+                    raise SystemExit('Bad listkeys pragma')
+                elif len(parts) == 1:
+                    listkeys = True
+                else:
+                    v = ast.literal_eval(parts[1])
+                    if not isinstance(v, int):
+                        raise SystemExit('Bad listkeys pragma')
+                    listkeys = bool(v)
+            elif parts and parts[0] == '#listdecl':
                 if len(parts) != 2:
                     raise SystemExit('Bad listdecl pragma')
                 elif listtype is not None:
                     raise SystemExit('Repeated listdecl pragma')
                 listtype = parts[1]
-                (hdrstream or outstream).write('struct %s { %s *key; '
-                    '%s *str; };\n' % (listtype, keytype, chartype))
+                (hdrstream or outstream).write('struct %s { %s %skey; '
+                    '%s *str; };\n' % (listtype, keytype,
+                    ('' if listkeys else '*'), chartype))
                 if hdrstream:
                     hdr_el = False
                 else:
@@ -224,10 +236,18 @@ def main():
                         parts[1], len(names) + 1));
                 outstream.write('struct %s %s[%s] = {\n' % (listtype,
                     parts[1], len(names) + 1))
-                for n in names:
-                    outstream.write('    { &%s_key, %s },\n' % (n, n))
-                outstream.write('    { NULL, NULL }\n'
-                                '};\n')
+                if listkeys:
+                    for n in names:
+                        outstream.write('    { 0x%08x, %s },\n' % (n[1],
+                                                                   n[0]))
+                    outstream.write('    { 0, NULL }\n'
+                                    '};\n')
+                else:
+                    for n in names:
+                        outstream.write('    { &%s_key, %s },\n' % (n[0],
+                                                                    n[0]))
+                    outstream.write('    { NULL, NULL }\n'
+                                    '};\n')
                 out_el = hdr_el = False
             elif parts and parts[0] == '#includehdr':
                 if not 1 <= len(parts) <= 2:
@@ -268,7 +288,7 @@ def main():
                     chartype, n, len(s) + 1))
             outstream.write('%s %s_key = 0x%x;\n%s %s[%s] = %s;\n' %
                 (keytype, n, nk, chartype, n, len(s) + 1, encode_string(ns)))
-            names.append(n)
+            names.append((n, nk))
             hdr_el = out_el = False
         else:
             raise SystemExit('Bad token type: %r' % token[0])
