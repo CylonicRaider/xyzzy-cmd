@@ -18,14 +18,16 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
 xyzzy: build/xyzzy-full
 	$(STRIP) -sw -R '.note*' -R '.comment*' -o $@ $<
 
-frobnicate: src/frobnicate.c
-	$(LD) -DFROBNICATE_STANDALONE -o $@ $< $(CFLAGS) $(LDFLAGS)
-
-build/xyzzy-full: build/xyzzy.o build/frobnicate.o build/strings.frs.o
+frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+frobnicate: build/frobnicate.o build/frobnicate-main.o
+build/xyzzy-full: build/xyzzy.o build/frobnicate.o build/strings.frs.o
 
 build/xyzzy.o: src/xyzzy.c src/frobnicate.h autosrc/strings.frs.h
 build/frobnicate.o: src/frobnicate.c src/frobnicate.h
+build/frobnicate-main.o: src/frobnicate-main.c src/frobnicate.c \
+    src/frobnicate.h
 build/strings.frs.o: autosrc/strings.frs.c autosrc/strings.frs.h
 
 build autosrc:
@@ -37,7 +39,7 @@ build/%.o: autosrc/%.c | build
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 autosrc/%.frs.h autosrc/%.frs.c: src/%.frs frobnicate script/frobstrings.py \
-| autosrc
+    | autosrc
 	script/frobstrings.py -o autosrc/$*.frs.c -h autosrc/$*.frs.h \
 	src/$*.frs || rm -f autosrc/$*.frs.h autosrc/$*.frs.c
 
