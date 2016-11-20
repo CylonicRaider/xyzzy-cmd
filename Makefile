@@ -22,13 +22,14 @@ frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 frobnicate: build/frobnicate.o build/frobnicate-main.o
-build/xyzzy-full: build/xyzzy.o build/frobnicate.o build/strings.frs.o
+build/xyzzy-full: build/xyzzy.o build/comm.o build/frobnicate.o \
+    build/strings.frs.o
 
-build/xyzzy.o: src/xyzzy.c src/frobnicate.h autosrc/strings.frs.h
-build/frobnicate.o: src/frobnicate.c src/frobnicate.h
-build/frobnicate-main.o: src/frobnicate-main.c src/frobnicate.c \
-    src/frobnicate.h
-build/strings.frs.o: autosrc/strings.frs.c autosrc/strings.frs.h
+build/xyzzy.o: src/frobnicate.h autosrc/strings.frs.h
+build/comm.o: src/frobnicate.h
+build/frobnicate.o: src/die.h src/frobnicate.h
+build/frobnicate-main.o: src/frobnicate.h
+build/strings.frs.o: autosrc/strings.frs.h
 
 build autosrc:
 	mkdir -p $@

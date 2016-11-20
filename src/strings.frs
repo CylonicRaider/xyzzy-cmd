@@ -11,6 +11,9 @@
 #listkeys
 #listdecl frobstring
 
+/* Randomness source */
+dev_urandom = "/dev/urandom";
+
 /* Test vector */
 hello = "Hello World!";
 

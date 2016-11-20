@@ -1,7 +1,10 @@
 
 /* The purpose of this is enigmatic. */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "frobnicate.h"
 #include "strings.frs.h"
@@ -11,6 +14,19 @@ void init_strings() {
     for (p = strings; p->str != NULL; p++) {
         defrob(p->key, p->str, p->str);
     }
+}
+
+int mkrand(void *buf, ssize_t len) {
+    int fd = open((char *) dev_urandom, O_RDONLY), rd;
+    if (fd == -1) return -1;
+    rd = read(fd, buf, len);
+    if (rd == -1) return -1;
+    if (rd != len) {
+        errno = EIO;
+        return -1;
+    }
+    close(fd);
+    return rd;
 }
 
 int main(int argc, char *argv[]) {
