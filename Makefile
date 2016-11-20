@@ -7,9 +7,10 @@ STRIP = strip
 # into the path.
 CFLAGS = -O2 -flto -Wall -D__KLIBC__ -D_BITSIZE=64 -iwithprefix include \
     -nostdinc -I$(KLIBC)/include/bits64 -I$(KLIBC)/include/arch/x86_64 \
-    -I$(KLIBC)/include -Isrc -Iautosrc
+    -I$(KLIBC)/include -Isrc -Iautosrc -ffunction-sections -fdata-sections \
+    -fno-asynchronous-unwind-tables -Werror
 LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
-    $(KLIBC)/lib/crt0.o -lc
+    $(KLIBC)/lib/crt0.o -lc -Wl,--gc-sections
 
 .PHONY: clean
 # Implicit rules create a cyclic dependency between %.frs and %.frs.c.
