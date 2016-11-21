@@ -1,5 +1,4 @@
 
-#include "die.h"
 #include "frobnicate.h"
 
 #include <stdlib.h>

@@ -1,6 +1,11 @@
-# Ignore build files
-/build/
-/autosrc/
+# Scratch space
+/TODO.txt
+# Final programs
 /frobnicate
 /xyzzy
-/TODO.txt
+# Temporary build files
+/build/
+# Auto-generated source files
+/src/*.frs.[ch]
+# Dependency map
+/.deps.mk
