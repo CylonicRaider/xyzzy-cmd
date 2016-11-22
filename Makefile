@@ -17,7 +17,7 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
 .SUFFIXES:
 
 xyzzy: build/xyzzy-full
-	$(STRIP) -sw -R '.note*' -R '.comment*' -o $@ $<
+	$(STRIP) -s -R '.note*' -R '.comment*' -o $@ $<
 
 frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
