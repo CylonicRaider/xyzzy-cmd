@@ -4,7 +4,7 @@
 #ifndef _COMM_H
 #define _COMM_H
 
-#define COMM_NOSCRAMBLE 1 /* Do not scramble the data sent */
+#define COMM_NOSCRAMBLE 1 /* Do not (de)scramble the data automatically */
 
 #define _COMM_MASK 1 /* Allowed COMM_* values */
 
@@ -13,7 +13,7 @@
 struct message {
     uint32_t key;
     uint32_t length;
-    char *data;
+    void *data;
 };
 
 union intcast {
