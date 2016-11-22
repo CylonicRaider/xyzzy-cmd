@@ -4,6 +4,10 @@
 #ifndef _COMM_H
 #define _COMM_H
 
+#define COMM_NOSCRAMBLE 1 /* Do not scramble the data sent */
+
+#define _COMM_MASK 1 /* Allowed COMM_* values */
+
 #include <inttypes.h>
 
 struct message {
@@ -18,11 +22,11 @@ union intcast {
 };
 
 /* Send a message into the given file descriptor
- * Since none are defined, flags must be zero. */
+ * Flags is a bitwise OR of COMM_* constants (or zero). */
 int send_message(int fd, const struct message *msg, int flags);
 
 /* Receive a message from the given file descriptor
- * Since none are defined, flags must be zero. */
+ * Flags is a bitwise OR of COMM_* constants (or zero). */
 int recv_message(int fd, struct message *msg, int flags);
 
 #endif

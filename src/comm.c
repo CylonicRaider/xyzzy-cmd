@@ -5,11 +5,12 @@
 #include <arpa/inet.h>
 
 #include "comm.h"
+#include "frobnicate.h"
 
 int send_message(int fd, const struct message *msg, int flags) {
     char *buf;
     int ret = -1;
-    if (flags) {
+    if (flags & ~_COMM_MASK) {
         errno = EINVAL;
         return -1;
     }
@@ -18,6 +19,8 @@ int send_message(int fd, const struct message *msg, int flags) {
     ((union intcast *) buf)[0].num = htonl(msg->key);
     ((union intcast *) buf)[1].num = htonl(msg->length);
     memcpy(buf + 8, msg->data, msg->length);
+    if (! (flags & COMM_NOSCRAMBLE))
+        frobl(msg->key, (uchar *) buf + 8, (uchar *) buf + 8, msg->length);
     ret = write(fd, buf, msg->length + 8);
     free(buf);
     return ret;
@@ -26,7 +29,7 @@ int send_message(int fd, const struct message *msg, int flags) {
 int recv_message(int fd, struct message *msg, int flags) {
     char recvbuf[65536], *recvptr;
     int ret;
-    if (flags) {
+    if (flags & ~_COMM_MASK) {
         errno = EINVAL;
         return -1;
     }
@@ -50,6 +53,9 @@ int recv_message(int fd, struct message *msg, int flags) {
     } else {
         realloc(msg->data, msg->length);
         if (msg->data == NULL) return -1;
+        if (! (flags & COMM_NOSCRAMBLE))
+            defrobl(msg->key, (uchar *) recvbuf + 8, (uchar *) recvbuf + 8,
+                    msg->length);
         memcpy(msg->data, recvbuf + 8, msg->length);
     }
     return ret;

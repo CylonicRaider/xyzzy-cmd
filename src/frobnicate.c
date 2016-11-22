@@ -9,8 +9,7 @@ static inline void frobrnd(uint32_t *state) {
     *state += 12345;
 }
 
-/* Scramble the given string */
-void frob(uint32_t key, uchar const* src, uchar *dest) {
+void frob(uint32_t key, const uchar *src, uchar *dest) {
     uchar in;
     do {
         in = *src++;
@@ -20,8 +19,15 @@ void frob(uint32_t key, uchar const* src, uchar *dest) {
     } while (in);
 }
 
-/* Descramble the given string */
-void defrob(uint32_t key, uchar const* src, uchar *dest) {
+void frobl(uint32_t key, const uchar *src, uchar *dest, size_t l) {
+    for (size_t i = l; i > 0; i--) {
+        key ^= *src++ << 16;
+        *dest++ = key >> 16;
+        frobrnd(&key);
+    }
+}
+
+void defrob(uint32_t key, const uchar *src, uchar *dest) {
     do {
         *dest = (key >> 16) ^ *src++;
         key ^= *dest << 16;
@@ -29,7 +35,14 @@ void defrob(uint32_t key, uchar const* src, uchar *dest) {
     } while (*dest++);
 }
 
-/* Zero out the given string */
+void defrobl(uint32_t key, const uchar *src, uchar *dest, size_t l) {
+    for (size_t i = l; i > 0; i--) {
+        *dest = (key >> 16) ^ *src++;
+        key ^= *dest++ << 16;
+        frobrnd(&key);
+    }
+}
+
 void frobclr(uchar *str) {
     memset(str, 0, strlen((char *) str));
 }
