@@ -13,7 +13,7 @@
 struct message {
     uint32_t key;
     uint32_t length;
-    uint8_t *data;
+    char *data;
 };
 
 union intcast {

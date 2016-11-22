@@ -14,7 +14,7 @@ union numbuf {
 /* Frobnicate uint32_t-key-uint32_t-length-and-prefixed strings from stdin to
  * stdout */
 int main(int argc, char *argv[]) {
-    uchar *buf = NULL;
+    char *buf = NULL;
     for (;;) {
         /* Read key and length */
         union numbuf rdbuf[2];

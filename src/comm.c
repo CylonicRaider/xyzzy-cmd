@@ -20,7 +20,7 @@ int send_message(int fd, const struct message *msg, int flags) {
     ((union intcast *) buf)[1].num = htonl(msg->length);
     memcpy(buf + 8, msg->data, msg->length);
     if (! (flags & COMM_NOSCRAMBLE))
-        frobl(msg->key, (uchar *) buf + 8, (uchar *) buf + 8, msg->length);
+        frobl(msg->key, buf + 8, buf + 8, msg->length);
     ret = write(fd, buf, msg->length + 8);
     free(buf);
     return ret;
@@ -54,8 +54,7 @@ int recv_message(int fd, struct message *msg, int flags) {
         realloc(msg->data, msg->length);
         if (msg->data == NULL) return -1;
         if (! (flags & COMM_NOSCRAMBLE))
-            defrobl(msg->key, (uchar *) recvbuf + 8, (uchar *) recvbuf + 8,
-                    msg->length);
+            defrobl(msg->key, recvbuf + 8, recvbuf + 8, msg->length);
         memcpy(msg->data, recvbuf + 8, msg->length);
     }
     return ret;

@@ -4,21 +4,22 @@
 
 #include <inttypes.h>
 
-typedef unsigned char uchar;
-
 /* Scramble the given string */
-void frob(uint32_t key, const uchar *src, uchar *dest);
+void frob(uint32_t key, const char *src, char *dest);
 
 /* Scramble the given memory region */
-void frobl(uint32_t key, const uchar *src, uchar *dest, size_t l);
+void frobl(uint32_t key, const char *src, char *dest, size_t l);
 
 /* Descramble the given string */
-void defrob(uint32_t key, const uchar *src, uchar *dest);
+void defrob(uint32_t key, const char *src, char *dest);
 
 /* Descramble the given memory area */
-void defrobl(uint32_t key, const uchar *src, uchar *dest, size_t l);
+void defrobl(uint32_t key, const char *src, char *dest, size_t l);
 
 /* Zero out the given string */
-void frobclr(uchar *str);
+void frobclr(char *str);
+
+/* Zero out the given memory block */
+void frobclrl(char *str, size_t l);
 
 #endif

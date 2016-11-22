@@ -17,7 +17,7 @@ void init_strings() {
 }
 
 int mkrand(void *buf, ssize_t len) {
-    int fd = open((char *) dev_urandom, O_RDONLY), rd;
+    int fd = open(dev_urandom, O_RDONLY), rd;
     if (fd == -1) return -1;
     rd = read(fd, buf, len);
     if (rd == -1) return -1;
@@ -31,6 +31,6 @@ int mkrand(void *buf, ssize_t len) {
 
 int main(int argc, char *argv[]) {
     init_strings();
-    puts((char *) hello);
+    puts(hello);
     return 42;
 }
