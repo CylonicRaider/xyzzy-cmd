@@ -20,7 +20,8 @@ void frob(uint32_t key, const char *src, char *dest) {
 }
 
 void frobl(uint32_t key, const char *src, char *dest, size_t l) {
-    for (size_t i = l; i > 0; i--) {
+    size_t i;
+    for (i = l; i > 0; i--) {
         key ^= ((uint8_t) *src++) << 16;
         *dest++ = key >> 16;
         frobrnd(&key);
@@ -36,7 +37,8 @@ void defrob(uint32_t key, const char *src, char *dest) {
 }
 
 void defrobl(uint32_t key, const char *src, char *dest, size_t l) {
-    for (size_t i = l; i > 0; i--) {
+    size_t i;
+    for (i = l; i > 0; i--) {
         *dest = (key >> 16) ^ *src++;
         key ^= ((uint8_t) *dest++) << 16;
         frobrnd(&key);
