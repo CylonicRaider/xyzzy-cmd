@@ -4,9 +4,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "frobnicate.h"
+#include "note.h"
 #include "strings.frs.h"
 
 void init_strings() {
@@ -30,7 +32,11 @@ int mkrand(void *buf, ssize_t len) {
 }
 
 int main(int argc, char *argv[]) {
+    struct note *note = NULL;
     init_strings();
     puts(hello);
+    note = note_read(STDIN_FILENO, note);
+    note_print(STDOUT_FILENO, note);
+    free(note);
     return 42;
 }
