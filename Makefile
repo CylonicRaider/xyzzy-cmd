@@ -23,8 +23,8 @@ frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 frobnicate: build/frobnicate.o build/frobnicate-main.o
-build/xyzzy-full: build/xyzzy.o build/comm.o build/frobnicate.o \
-    build/strings.frs.o
+build/xyzzy-full: build/xyzzy.o build/comm.o build/note.o \
+    build/frobnicate.o build/strings.frs.o
 
 build:
 	mkdir -p $@
