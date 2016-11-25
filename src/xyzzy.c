@@ -32,11 +32,18 @@ int mkrand(void *buf, ssize_t len) {
 }
 
 int main(int argc, char *argv[]) {
-    struct note *note = NULL;
+    struct note *notes[3] = {}, **newnotes, **n;
+    char *buf = NULL;
+    size_t len = 0;
     init_strings();
     puts(hello);
-    note = note_read(STDIN_FILENO, note);
-    note_print(STDOUT_FILENO, note);
-    free(note);
+    notes[0] = note_read(STDIN_FILENO, notes[0]);
+    if (notes[0] == NULL) { perror("note_read"); return 1; }
+    notes[1] = notes[0];
+    buf = note_pack(NULL, &len, 1, (const struct note **) notes);
+    if (buf == NULL) { perror("note_pack"); return 1; }
+    newnotes = note_unpack(buf + 1, len - 1, NULL);
+    if (newnotes == NULL) { perror("note_unpack"); return 1; }
+    for (n = newnotes; *n; n++) note_print(STDOUT_FILENO, *n);
     return 42;
 }
