@@ -24,7 +24,7 @@ frobnicate build/xyzzy-full:
 
 frobnicate: build/frobnicate.o build/frobnicate-main.o
 build/xyzzy-full: build/xyzzy.o build/comm.o build/note.o \
-    build/frobnicate.o build/strings.frs.o
+    build/frobnicate.o build/ioutils.o build/strings.frs.o
 
 build:
 	mkdir -p $@
