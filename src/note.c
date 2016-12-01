@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
+#include "ioutils.h"
 #include "note.h"
 #include "strings.frs.h"
 
@@ -47,12 +48,14 @@ int note_print(int fd, const struct note *note) {
     FILE *stream;
     int nfd;
     const char *p;
+    struct xtime tm;
     nfd = dup(fd);
     if (nfd == -1) return -1;
     stream = fdopen(nfd, notes_streammode);
     if (stream == NULL) return -1;
+    xgmtime(&tm, note->time.tv_sec);
     if (fprintf(stream, notes_format, note->sender,
-                (long long) note->time.tv_sec,
+                tm.year, tm.month, tm.day, tm.hour, tm.minute, tm.second,
                 (int) (note->time.tv_usec / 1000)) < 0)
         goto error;
     /* No reliable way to output a block of data with explicit length... */

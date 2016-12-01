@@ -6,11 +6,12 @@
 #include <unistd.h>
 
 struct xtime {
-    int year, month, day;
-    int hour, minute, second;
+    int year;
+    unsigned short month, day;
+    unsigned short hour, minute, second;
 };
 
-/* Write result of formatting ftm with additional arguments to stream
+/* Write result of formatting fmt with additional arguments to stream
  * Returns the amount of bytes written on success, or -1 on error, setting
  * errno appropriately.
  * Supported format specifiers:

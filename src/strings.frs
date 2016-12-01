@@ -17,7 +17,8 @@ dev_urandom = "/dev/urandom";
 /* Various strings for notes */
 notes_unknown = "???";
 notes_streammode = "w";
-notes_format = "From: UID %d\nDate: +%lld.%03d\n";
+notes_format = "From: UID %d\n"
+    "Date: %d-%02hd-%02hd %02hd:%02hd:%02hd.%03d Z\n";
 
 /* Function name in main */
 note_print_name = "note_print";
