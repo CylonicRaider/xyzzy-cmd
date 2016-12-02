@@ -51,7 +51,7 @@ int note_print(int fd, const struct note *note) {
     struct xtime tm;
     nfd = dup(fd);
     if (nfd == -1) return -1;
-    stream = fdopen(nfd, notes_streammode);
+    stream = fdopen(nfd, "w");
     if (stream == NULL) return -1;
     xgmtime(&tm, note->time.tv_sec);
     if (xprintf(stream, notes_format, (int) note->sender, (int) tm.year,

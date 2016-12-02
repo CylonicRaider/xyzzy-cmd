@@ -19,7 +19,7 @@ struct xtime {
  * %s -- char *
  * The space and minus flags and a field width are supported.
  * Who needs more? */
-int xprintf(FILE *stream, const char *fmt, ...);
+ssize_t xprintf(FILE *stream, const char *fmt, ...);
 
 /* Break the given UNIX timestamp into its fields
  * Timestamps too large are silently truncated. */

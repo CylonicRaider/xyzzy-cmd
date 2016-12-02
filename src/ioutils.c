@@ -13,7 +13,7 @@
 #define _XPRINTF_ZPAD 1
 #define _XPRINTF_LEFT 2
 
-int xprintf(FILE *stream, const char *fmt, ...) {
+ssize_t xprintf(FILE *stream, const char *fmt, ...) {
     size_t written = 0;
     char numbuf[DECSPACE(int)];
     va_list ap;
@@ -79,19 +79,22 @@ int xprintf(FILE *stream, const char *fmt, ...) {
         outputlen = strlen(output);
         if (outputlen >= length) {
             written += outputlen;
-            fputs(output, stream);
+            if (fputs(output, stream) == EOF) return -1;
         } else if (flags & _XPRINTF_LEFT) {
             written += length;
-            fputs(output, stream);
-            for (; outputlen < length; length--) putc(' ', stream);
+            if (fputs(output, stream) == EOF) return -1;
+            for (; outputlen < length; length--)
+                if (putc(' ', stream) == EOF) return -1;
         } else if (flags & _XPRINTF_ZPAD) {
             written += length;
-            for (; outputlen < length; length--) putc('0', stream);
-            fputs(output, stream);
+            for (; outputlen < length; length--)
+                if (putc('0', stream) == EOF) return -1;
+            if (fputs(output, stream) == EOF) return -1;
         } else {
             written += length;
-            for (; outputlen < length; length--) putc(' ', stream);
-            fputs(output, stream);
+            for (; outputlen < length; length--)
+                if (putc(' ', stream) == EOF) return -1;
+            if (fputs(output, stream) == EOF) return -1;
         }
     }
     va_end(ap);
