@@ -1,16 +1,106 @@
 
 #include <errno.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "ioutils.h"
+#include "strings.frs.h"
+
+#define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
+
+#define _XPRINTF_ZPAD 1
+#define _XPRINTF_LEFT 2
 
 int xprintf(FILE *stream, const char *fmt, ...) {
-    errno = ENOSYS;
-    return -1;
+    size_t written = 0;
+    char numbuf[DECSPACE(int)];
+    va_list ap;
+    va_start(ap, fmt);
+    while (*fmt) {
+        int length, flags;
+        char conv, *output;
+        size_t outputlen;
+        if (*fmt != '%') {
+            /* There is seriously no API for outputting arbitrary blocks of
+             * data. */
+            if (putc(*fmt++, stream) == EOF) return -1;
+            written++;
+            continue;
+        }
+        length = 0, flags = 0, conv = 0;
+        while (*++fmt) {
+            if (('1' <= *fmt && *fmt <= '9') || (length && *fmt == '0')) {
+                length = (length * 10) + (*fmt - '0');
+            } else if (*fmt == '0') {
+                flags |= _XPRINTF_ZPAD;
+            } else if (*fmt == '-' && ! length) {
+                flags |= _XPRINTF_LEFT;
+            } else if (*fmt == 's' || *fmt == 'd' || *fmt == '%') {
+                conv = *fmt++;
+                break;
+            } else {
+                errno = EINVAL;
+                return -1;
+            }
+        }
+        if (conv == 0) {
+            errno = EINVAL;
+            return -1;
+        }
+        if (conv == 's') {
+            output = va_arg(ap, char *);
+        } else if (conv == 'd') {
+            int val = va_arg(ap, int);
+            unsigned int uval;
+            char *dp = numbuf, *ddp, *rdp;
+            if (val < 0) {
+                *dp++ = '-';
+                uval = -val;
+            } else {
+                uval = val;
+            }
+            rdp = dp;
+            do {
+                *rdp++ = uval % 10 + '0';
+                uval /= 10;
+            } while (uval);
+            for (ddp = dp, dp = rdp, rdp--; ddp < rdp; ddp++, rdp--) {
+                char temp = *rdp;
+                *rdp = *ddp;
+                *ddp = temp;
+            }
+            *dp = 0;
+            output = numbuf;
+        } else {
+            output = "%";
+        }
+        outputlen = strlen(output);
+        if (outputlen >= length) {
+            written += outputlen;
+            fputs(output, stream);
+        } else if (flags & _XPRINTF_LEFT) {
+            written += length;
+            fputs(output, stream);
+            for (; outputlen < length; length--) putc(' ', stream);
+        } else if (flags & _XPRINTF_ZPAD) {
+            written += length;
+            for (; outputlen < length; length--) putc('0', stream);
+            fputs(output, stream);
+        } else {
+            written += length;
+            for (; outputlen < length; length--) putc(' ', stream);
+            fputs(output, stream);
+        }
+    }
+    va_end(ap);
+    return written;
 }
 
 void xgmtime(struct xtime *tm, time_t ts) {
     time_t z, era;
-    unsigned int doe, yoe, doy, mp, m;
+    unsigned int doe, yoe, doy, mp;
     tm->second = ts % 60;
     tm->minute = ts / 60 % 60;
     tm->hour = ts / 3600 % 24;
@@ -21,10 +111,9 @@ void xgmtime(struct xtime *tm, time_t ts) {
     yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
     doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
     mp = (5 * doy + 2) / 153;
-    m = mp + (mp < 10 ? 3 : -9);
     tm->day = doy - (153 * mp + 2) / 5 + 1;
-    tm->month = m;
-    tm->year = yoe + era * 400 + (m <= 2);
+    tm->month = mp + (mp < 10 ? 3 : -9);
+    tm->year = yoe + era * 400 + (tm->month <= 2);
 }
 
 char *xgetpwuid(uid_t uid) {

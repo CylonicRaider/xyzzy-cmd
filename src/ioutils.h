@@ -15,8 +15,9 @@ struct xtime {
  * Returns the amount of bytes written on success, or -1 on error, setting
  * errno appropriately.
  * Supported format specifiers:
- * %i -- int
+ * %d -- int
  * %s -- char *
+ * The space and minus flags and a field width are supported.
  * Who needs more? */
 int xprintf(FILE *stream, const char *fmt, ...);
 

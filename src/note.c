@@ -54,16 +54,16 @@ int note_print(int fd, const struct note *note) {
     stream = fdopen(nfd, notes_streammode);
     if (stream == NULL) return -1;
     xgmtime(&tm, note->time.tv_sec);
-    if (fprintf(stream, notes_format, note->sender,
-                tm.year, tm.month, tm.day, tm.hour, tm.minute, tm.second,
-                (int) (note->time.tv_usec / 1000)) < 0)
+    if (xprintf(stream, notes_format, (int) note->sender, (int) tm.year,
+                (int) tm.month, (int) tm.day, (int) tm.hour, (int) tm.minute,
+                (int) tm.second, (int) (note->time.tv_usec / 1000)) < 0)
         goto error;
     /* No reliable way to output a block of data with explicit length... */
     errno = 0;
     for (p = note->content; p != note->content + note->length; p++) {
-        if (fputc(*p, stream) == EOF) goto error;
+        if (putc(*p, stream) == EOF) goto error;
     }
-    if (fputs("\n", stream) == EOF) goto error;
+    if (putc('\n', stream) == EOF) goto error;
     if (fclose(stream) == EOF) return -1;
     return 0;
     /* Abort */
