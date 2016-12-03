@@ -22,13 +22,15 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...) {
         int length, flags;
         char conv, *output;
         size_t outputlen;
-        if (*fmt != '%') {
-            /* There is seriously no API for outputting arbitrary blocks of
-             * data. */
-            if (putc(*fmt++, stream) == EOF) return -1;
+        const char *oldfmt = fmt;
+        while (*fmt && *fmt != '%') fmt++;
+        if (fmt != oldfmt) {
+            outputlen = fmt - oldfmt;
+            if (fwrite(oldfmt, 1, outputlen, stream) != outputlen)
+                return -1;
             written++;
-            continue;
         }
+        if (! *fmt) break;
         length = 0, flags = 0, conv = 0;
         while (*++fmt) {
             if (('1' <= *fmt && *fmt <= '9') || (length && *fmt == '0')) {

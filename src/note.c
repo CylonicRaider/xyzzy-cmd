@@ -47,7 +47,6 @@ struct note *note_read(int fd, struct note *note) {
 int note_print(int fd, const struct note *note) {
     FILE *stream;
     int nfd;
-    const char *p;
     struct xtime tm;
     nfd = dup(fd);
     if (nfd == -1) return -1;
@@ -58,11 +57,8 @@ int note_print(int fd, const struct note *note) {
                 (int) tm.month, (int) tm.day, (int) tm.hour, (int) tm.minute,
                 (int) tm.second, (int) (note->time.tv_usec / 1000)) < 0)
         goto error;
-    /* No reliable way to output a block of data with explicit length... */
-    errno = 0;
-    for (p = note->content; p != note->content + note->length; p++) {
-        if (putc(*p, stream) == EOF) goto error;
-    }
+    if (fwrite(note->content, 1, note->length, stream) != note->length)
+        goto error;
     if (putc('\n', stream) == EOF) goto error;
     if (fclose(stream) == EOF) return -1;
     return 0;
