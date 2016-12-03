@@ -21,6 +21,18 @@ struct xtime {
  * Who needs more? */
 ssize_t xprintf(FILE *stream, const char *fmt, ...);
 
+/* Read a whole line from the given stream
+ * The given buffer *buf (with size buflen) is dynamically reallocated as
+ * necessary; it is in particular left up to the caller to free() it.
+ * A line ends at the newline character '\n' or EOF; the newline character
+ * (if any) is not included in the result.
+ * Returns the actual length of the line (may include NUL-s and be less than
+ * the new buffer length), -2 if there is nothing left to read, or -1 in case
+ * of failure (leaving buf and buflen in a consistent state, i.e. buf can
+ * either be a buffer of size buflen, or NULL; and leaving the state of the
+ * stream undefined). */
+ssize_t xgetline(FILE *stream, char **buf, size_t *buflen);
+
 /* Break the given UNIX timestamp into its fields
  * Timestamps too large are silently truncated. */
 void xgmtime(struct xtime *tm, time_t ts);

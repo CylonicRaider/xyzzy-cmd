@@ -3,12 +3,15 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ioutils.h"
 #include "strings.frs.h"
 
 #define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
+
+#define LINESIZE 128
 
 #define _XPRINTF_ZPAD 1
 #define _XPRINTF_LEFT 2
@@ -101,6 +104,31 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...) {
     }
     va_end(ap);
     return written;
+}
+
+ssize_t xgetline(FILE *stream, char **buf, size_t *buflen) {
+    ssize_t read = 0;
+    if (*buf == NULL || *buflen < LINESIZE) {
+        *buflen = LINESIZE;
+        *buf = realloc(*buf, *buflen);
+        if (*buf == NULL) return -1;
+    }
+    for (;;) {
+        int ch;
+        if (read == *buflen) {
+            *buflen *= 2;
+            *buf = realloc(*buf, *buflen);
+            if (*buf == NULL) return -1;
+        }
+        ch = fgetc(stream);
+        if (ch == EOF || ch == '\n') {
+            if (ferror(stream)) return -1;
+            if (ch == EOF && read == 0) return -2;
+            break;
+        }
+        (*buf)[read++] = ch;
+    }
+    return read;
 }
 
 void xgmtime(struct xtime *tm, time_t ts) {
