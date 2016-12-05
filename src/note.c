@@ -48,12 +48,15 @@ int note_print(int fd, const struct note *note) {
     FILE *stream;
     int nfd;
     struct xtime tm;
+    char *name;
     nfd = dup(fd);
     if (nfd == -1) return -1;
     stream = fdopen(nfd, "w");
     if (stream == NULL) return -1;
+    name = xgetpwuid(note->sender);
+    if (name == NULL) return -1;
     xgmtime(&tm, note->time.tv_sec);
-    if (xprintf(stream, notes_format, (int) note->sender, (int) tm.year,
+    if (xprintf(stream, notes_format, name, (int) note->sender, (int) tm.year,
                 (int) tm.month, (int) tm.day, (int) tm.hour, (int) tm.minute,
                 (int) tm.second, (int) (note->time.tv_usec / 1000)) < 0)
         goto error;

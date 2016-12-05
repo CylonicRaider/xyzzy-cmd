@@ -11,11 +11,12 @@
 #listkeys
 #listdecl frobstring
 
-/* Randomness source */
+/* System files */
 dev_urandom = "/dev/urandom";
+etc_passwd = "/etc/passwd";
 
 /* Various strings for notes */
-notes_format = "From: UID %d\n"
+notes_format = "From: %s (%d)\n"
     "Date: %d-%02d-%02d %02d:%02d:%02d.%02d Z\n";
 
 /* Function name in main */

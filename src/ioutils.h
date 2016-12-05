@@ -8,6 +8,8 @@
 #define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
 #define INT_SPACE DECSPACE(int)
 
+#define NAME_SIZE 128
+
 struct xtime {
     int year;
     unsigned short month, day;

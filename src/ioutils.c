@@ -152,6 +152,46 @@ void xgmtime(struct xtime *tm, time_t ts) {
 }
 
 char *xgetpwuid(uid_t uid) {
-    errno = ENOSYS;
-    return NULL;
+    static char namebuf[NAME_SIZE], uidbuf[INT_SPACE];
+    char *line = NULL, *ret = NULL;
+    size_t linebuflen = 0;
+    FILE *f = fopen(etc_passwd, "r");
+    if (f == NULL) return NULL;
+    /* Expected to not compile if uid_t cannot be converted to int */
+    xitoa(uidbuf, uid);
+    for (;;) {
+        ssize_t linelen = xgetline(f, &line, &linebuflen);
+        char *p, *end = line + linelen, *uidstr = NULL, *namestr = NULL;
+        if (linelen == -1) goto end;
+        if (linelen == 0) continue;
+        /* Ignore comments */
+        p = line;
+        if (p == end || *p == '#') continue;
+        /* Skip user name */
+        for (namestr = p; p != end && *p != ':'; p++);
+        /* Ignore truncated lines */
+        if (p == end) continue;
+        /* Terminate name; skip password */
+        for (*p = 0; p != end && *p != ':'; p++);
+        /* Ignore bad lines (again) */
+        if (p == end) continue;
+        /* Skip UID */
+        for (uidstr = ++p; p != end && *p != ':'; p++);
+        /* Ignore bad lines (again again) */
+        if (p == end) continue;
+        /* Terminate UID */
+        *p = 0;
+        /* Compare UID-s */
+        if (strcmp(uidstr, uidbuf) != 0) continue;
+        /* Copy name into buffer */
+        strncpy(namebuf, namestr, sizeof(namebuf) - 1);
+        namebuf[sizeof(namebuf) - 1] = 0;
+        /* Done */
+        ret = namebuf;
+        goto end;
+    }
+    errno = ENOENT;
+    end:
+        fclose(f);
+        return ret;
 }
