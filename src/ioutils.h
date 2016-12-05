@@ -5,11 +5,19 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
+#define INT_SPACE DECSPACE(int)
+
 struct xtime {
     int year;
     unsigned short month, day;
     unsigned short hour, minute, second;
 };
+
+/* Convert the given integer to a string in the caller-passed buffer
+ * The buffer must be at least INT_SPACE bytes large.
+ * This function is infallible. */
+void xitoa(char *buf, int i);
 
 /* Write result of formatting fmt with additional arguments to stream
  * Returns the amount of bytes written on success, or -1 on error, setting

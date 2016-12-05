@@ -9,16 +9,36 @@
 #include "ioutils.h"
 #include "strings.frs.h"
 
-#define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
-
 #define LINESIZE 128
 
 #define _XPRINTF_ZPAD 1
 #define _XPRINTF_LEFT 2
 
+void xitoa(char *buf, int i) {
+    unsigned int ui;
+    char *dp = buf, *ddp, *rdp;
+    if (i < 0) {
+        *dp++ = '-';
+        ui = -i;
+    } else {
+        ui = i;
+    }
+    rdp = dp;
+    do {
+        *rdp++ = ui % 10 + '0';
+        ui /= 10;
+    } while (ui);
+    for (ddp = dp, dp = rdp, rdp--; ddp < rdp; ddp++, rdp--) {
+        char temp = *rdp;
+        *rdp = *ddp;
+        *ddp = temp;
+    }
+    *dp = 0;
+}
+
 ssize_t xprintf(FILE *stream, const char *fmt, ...) {
     size_t written = 0;
-    char numbuf[DECSPACE(int)];
+    char numbuf[INT_SPACE];
     va_list ap;
     va_start(ap, fmt);
     while (*fmt) {
@@ -58,25 +78,7 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...) {
             output = va_arg(ap, char *);
         } else if (conv == 'd') {
             int val = va_arg(ap, int);
-            unsigned int uval;
-            char *dp = numbuf, *ddp, *rdp;
-            if (val < 0) {
-                *dp++ = '-';
-                uval = -val;
-            } else {
-                uval = val;
-            }
-            rdp = dp;
-            do {
-                *rdp++ = uval % 10 + '0';
-                uval /= 10;
-            } while (uval);
-            for (ddp = dp, dp = rdp, rdp--; ddp < rdp; ddp++, rdp--) {
-                char temp = *rdp;
-                *rdp = *ddp;
-                *ddp = temp;
-            }
-            *dp = 0;
+            xitoa(numbuf, val);
             output = numbuf;
         } else {
             output = "%";
