@@ -10,7 +10,8 @@
 #define STATUSCTL_FORCE   4 /* Force enabling (break lock) */
 
 #define STATUSRES_ERROR -1 /* Generic failure (see errno for details) */
-#define STATUSRES_AGAIN -2 /* Tried to enable locked status */
+#define STATUSRES_INVAL -2 /* Invalid argument for statusctl() */
+#define STATUSRES_AGAIN -3 /* Tried to enable locked status */
 
 struct status {
     int flags;
