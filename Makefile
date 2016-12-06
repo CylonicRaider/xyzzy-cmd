@@ -23,7 +23,7 @@ frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 frobnicate: build/frobnicate.o build/frobnicate-main.o
-build/xyzzy-full: build/xyzzy.o build/comm.o build/note.o \
+build/xyzzy-full: build/xyzzy.o build/comm.o build/note.o build/status.o \
     build/frobnicate.o build/ioutils.o build/strings.frs.o
 
 build:
