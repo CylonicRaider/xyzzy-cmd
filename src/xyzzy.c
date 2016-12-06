@@ -45,5 +45,10 @@ int main(int argc, char *argv[]) {
     newnotes = note_unpack(buf + 1, len - 1, NULL);
     if (newnotes == NULL) return 1;
     for (n = newnotes; *n; n++) note_print(STDOUT_FILENO, *n);
+    free(notes[0]);
+    free(newnotes[0]);
+    free(newnotes[1]);
+    free(newnotes);
+    free(buf);
     return 42;
 }

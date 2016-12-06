@@ -192,6 +192,7 @@ char *xgetpwuid(uid_t uid) {
     }
     errno = ENOENT;
     end:
+        free(line);
         fclose(f);
         return ret;
 }

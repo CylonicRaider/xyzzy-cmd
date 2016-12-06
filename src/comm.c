@@ -1,6 +1,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -51,7 +52,7 @@ int recv_message(int fd, struct message *msg, int flags) {
         free(msg->data);
         msg->data = NULL;
     } else {
-        realloc(msg->data, msg->length);
+        msg->data = realloc(msg->data, msg->length);
         if (msg->data == NULL) return -1;
         if (! (flags & COMM_NOSCRAMBLE))
             defrobl(msg->key, recvbuf + 8, recvbuf + 8, msg->length);

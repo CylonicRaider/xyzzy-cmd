@@ -3,6 +3,7 @@
 #define _FROBNICATE_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
 /* Scramble the given string */
 void frob(uint32_t key, const char *src, char *dest);
