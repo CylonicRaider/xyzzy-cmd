@@ -1,4 +1,5 @@
 
+#include <errno.h>
 #include <stdlib.h>
 
 #include "userhash.h"
@@ -88,4 +89,33 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid) {
     }
     insert(ht->data, ht->datacap, node);
     return node;
+}
+
+int uhnode_addnote(struct uhnode *node, struct note *note) {
+    size_t size = NOTE_SIZE(note);
+    if (node->notesize + size > NOTES_MAX) {
+        errno = EDQUOT;
+        return -1;
+    }
+    if (node->notelen + 2 > node->notecap) {
+        size_t newcap = (node->notecap == 0) ? 2 : node->notecap * 2;
+        struct note **newnotes = malloc(newcap);
+        if (newnotes == NULL) return -1;
+        memcpy(newnotes, node->notes, node->notelen * sizeof(struct note *));
+        free(node->notes);
+        node->notecap = newcap;
+        node->notes = newnotes;
+    }
+    node->notesize += size;
+    node->notes[node->notelen++] = note;
+    node->notes[node->notelen] = NULL;
+    return 0;
+}
+
+struct note **uhnode_popnotes(struct uhnode *node) {
+    struct note **ret = node->notes;
+    node->notecap = 0;
+    node->notelen = 0;
+    node->notesize = 0;
+    return ret;
 }
