@@ -23,4 +23,11 @@ notes_format = "From: %s (%d)\n"
 
 #listdef strings
 
+/* Behold the true name of Ba'al the Soul Eater */
+/* ...Or, at least, part of it. */
+socket_addr = "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+              "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+              "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+              "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\";
+
 #endif

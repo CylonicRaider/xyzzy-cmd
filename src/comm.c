@@ -7,6 +7,14 @@
 
 #include "comm.h"
 #include "frobnicate.h"
+#include "strings.frs.h"
+
+void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen) {
+    addr->sun_family = AF_UNIX;
+    addr->sun_path[0] = 0;
+    memcpy(addr->sun_path + 1, socket_addr, sizeof(socket_addr) - 2);
+    *addrlen = sizeof(sa_family_t) + sizeof(socket_addr) - 1;
+}
 
 int send_message(int fd, const struct message *msg, int flags) {
     char *buf;
