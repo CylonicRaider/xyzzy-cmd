@@ -17,8 +17,13 @@ struct status {
     int flags;
 };
 
-/* Modify the status as stored in st by action,
- * which is a bitmask of STATUSCTL_* flags.
+/* Initialize the given status structure
+ * Returns zero on success or -1 on error with errno set (does not
+ * happen). */
+int status_init(struct status *st);
+
+/* Modify the status as stored in st by action.
+ * action is a bitmask of STATUSCTL_* flags
  * Returns the new status, or a (negative) STATUSRES_* constant on error. */
 int statusctl(struct status *st, int action);
 

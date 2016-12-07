@@ -3,12 +3,16 @@
 
 #include "status.h"
 
+int status_init(struct status *st) {
+    st->flags = 0;
+    return 0;
+}
+
 int statusctl(struct status *st, int command) {
     if (command & ~(STATUSCTL_ENABLE | STATUSCTL_DISABLE |
                     STATUSCTL_FORCE)) {
         return STATUSRES_INVAL;
-    }
-    if (command & STATUSCTL_ENABLE && command & STATUSCTL_DISABLE) {
+    } else if (command & STATUSCTL_ENABLE && command & STATUSCTL_DISABLE) {
         return STATUSRES_INVAL;
     } else if (command & STATUSCTL_ENABLE) {
         if (! (st->flags & STATUS_ENABLED)) {

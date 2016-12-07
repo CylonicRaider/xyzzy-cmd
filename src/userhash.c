@@ -60,6 +60,10 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid) {
     ht->datacount++;
     node = calloc(1, sizeof(struct uhnode));
     if (node == NULL) return NULL;
+    if (status_init(&node->status)) {
+        free(node);
+        return NULL;
+    }
     if (ht->datacount * LOAD_THRESHOLD > ht->datacap) {
         size_t newcap = ht->datacap * CAPACITY_INCR, i;
         struct uhnode **newdata = calloc(newcap, sizeof(struct uhnode *));
