@@ -14,7 +14,7 @@
 void init_strings() {
     struct frobstring *p;
     for (p = strings; p->str != NULL; p++) {
-        defrob(p->key, p->str, p->str);
+        defrobl(p->key, p->str, p->str, p->len + 1);
     }
 }
 

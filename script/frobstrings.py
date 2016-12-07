@@ -150,6 +150,15 @@ def open_file(name, mode, default):
         return open(name, mode)
 
 def main():
+    def writehdr(line):
+        if not hdrstream: return
+        if el['hdr']: hdrstream.write('\n')
+        hdrstream.write(line + '\n')
+        el['hdr'] = False
+    def writeout(line):
+        if el['out']: outstream.write('\n')
+        outstream.write(line + '\n')
+        el['out'] = False
     # Parse arguments
     infile, hdrfile, outfile = None, None, None
     try:
@@ -186,23 +195,21 @@ def main():
         hdrstream = open_file(hdrfile, 'w', sys.stdout)
     # State
     listtype, names = None, []
-    keytype, chartype = 'int', 'char'
+    keytype, lentype, chartype = 'int', 'int', 'char'
     listkeys = False
-    out_el, hdr_el = False, False
+    el = {'out': False, 'hdr': False}
     # Spawn frobnication server
     proc = subprocess.Popen(['./frobnicate'], stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
     for token in parse_tmpl(instream):
         if token[0] == 'empty':
-            if hdrstream and not hdr_el: hdrstream.write('\n')
-            if not out_el: outstream.write('\n')
-            out_el = hdr_el = True
+            el['out'] = True
+            el['hdr'] = True
         elif token[0] == 'comment':
-            (hdrstream or outstream).write(token[1] + '\n')
             if hdrstream:
-                hdr_el = False
+                writehdr(token[1])
             else:
-                out_el = False
+                writeout(token[1])
         elif token[0] == 'prep':
             parts = token[1].split()
             if parts and parts[0] == '#listkeys':
@@ -221,37 +228,33 @@ def main():
                 elif listtype is not None:
                     raise SystemExit('Repeated listdecl pragma')
                 listtype = parts[1]
-                (hdrstream or outstream).write('struct %s { %s %skey; '
-                    '%s *str; };\n' % (listtype, keytype,
-                    ('' if listkeys else '*'), chartype))
+                line = ('struct %s { %s %skey; %s len; %s *str; };' %
+                        (listtype, keytype, ('' if listkeys else '*'),
+                         lentype, chartype))
                 if hdrstream:
-                    hdr_el = False
+                    writehdr(line)
                 else:
-                    out_el = False
+                    writeout(line)
             elif parts and parts[0] == '#listdef':
                 if len(parts) != 2:
                     raise SystemExit('Bad listdef pragma')
                 elif listtype is None:
                     raise SystemExit('listdef pragma without listdecl!')
-                if hdrstream:
-                    hdrstream.write('struct %s %s[%s];\n' % (listtype,
-                        parts[1], len(names) + 1));
-                outstream.write('struct %s %s[%s] = {\n' % (listtype,
-                    parts[1], len(names) + 1))
+                writehdr('struct %s %s[%s];' % (listtype, parts[1],
+                                                len(names) + 1))
+                writeout('struct %s %s[%s] = {' % (listtype, parts[1],
+                                                   len(names) + 1))
                 if listkeys:
                     for n in names:
-                        outstream.write('    { 0x%08x, %s },\n' % (n[1],
-                                                                   n[0]))
-                    outstream.write('    { 0, NULL }\n'
-                                    '};\n')
+                        writeout('    { 0x%08x, %s, %s },' %
+                                 (n[1], n[2], n[0]))
+                    writeout('    { 0, 0, NULL }\n};')
                 else:
                     for n in names:
-                        outstream.write('    { &%s_key, %s },\n' % (n[0],
-                                                                    n[0]))
-                    outstream.write('    { NULL, NULL }\n'
-                                    '};\n')
+                        writeout('    { &%s_key, %s, %s },' %
+                                 (n[0], n[2], n[0]))
+                    writeout('    { NULL, 0, NULL }\n};')
                 listtype, name = None, []
-                out_el = hdr_el = False
             elif parts and parts[0] == '#includehdr':
                 if not 1 <= len(parts) <= 2:
                     raise SystemExit('Bad includehdr pragma')
@@ -259,44 +262,43 @@ def main():
                     raise SystemExit('Cannot infer header location')
                 if hdrstream:
                     if len(parts) > 1:
-                        outstream.write('#include "%s/%s"\n' % (parts[1],
-                                                                hdrfile))
+                        writeout('#include "%s"' % (os.path.join(parts[1],
+                                                                 hdrfile)))
                     else:
-                        outstream.write('#include "%s"\n' % hdrfile)
-                    out_el = False
+                        writeout('#include "%s"' % hdrfile)
             elif parts and parts[0] == '#keytype':
                 if len(parts) != 2:
                     raise SystemExit('Bad keytype pragma')
                 keytype = parts[1]
+            elif parts and parts[0] == '#lentype':
+                if len(parts) != 2:
+                    raise SystemExit('Bad lentype pragma')
+                lentype = parts[1]
             elif parts and parts[0] == '#chartype':
                 if len(parts) != 2:
                     raise SystemExit('Bad chartype pragma')
                 chartype = parts[1]
             else:
-                (hdrstream or outstream).write(token[1] + '\n')
                 if hdrstream:
-                    hdr_el = False
+                    writehdr(token[1])
                 else:
-                    out_el = False
+                    writeout(token[1])
         elif token[0] == 'string':
             n, s = token[1], token[2]
             k = struct.unpack('!I', os.urandom(4))[0]
-            if b'\0' in s:
-                raise SystemExit('String literal contains null byte: %r' % s)
             s += b'\0'
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
                 if not listkeys or not listtype:
-                    hdrstream.write('%s %s_key;\n'  % (keytype, n))
-                hdrstream.write('%s %s[%s];\n' % (chartype, n, len(s) + 1))
+                    writehdr('%s %s_key;'  % (keytype, n))
+                writehdr('%s %s[%s];' % (chartype, n, len(s) + 1))
             if not listkeys or not listtype:
-                outstream.write('%s %s_key = 0x%x;\n' % (keytype, n, nk))
-            outstream.write('%s %s[%s] = %s;\n' % (chartype, n, len(s) + 1,
-                                                   encode_string(ns)))
+                writeout('%s %s_key = 0x%x;' % (keytype, n, nk))
+            writeout('%s %s[%s] = %s;' % (chartype, n, len(s) + 1,
+                                            encode_string(ns)))
             if listtype is not None:
-                names.append((n, nk))
-            hdr_el = out_el = False
+                names.append((n, nk, len(s) - 1))
         else:
             raise SystemExit('Bad token type: %r' % token[0])
     if hdrstream:

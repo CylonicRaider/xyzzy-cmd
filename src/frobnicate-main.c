@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         if (rd == -1) die_err("read");
         if (rd != l) die("Short read");
         /* Frobnicate */
-        frob(key, buf, buf);
+        frobl(key, buf, buf, l);
         /* Write */
         wr = write(STDOUT_FILENO, rdbuf, 8);
         if (wr == -1) die_err("write");

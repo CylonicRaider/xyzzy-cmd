@@ -15,6 +15,7 @@ LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
 .PHONY: clean
 # Implicit rules create a cyclic dependency between %.frs and %.frs.c.
 .SUFFIXES:
+.SECONDARY:
 
 xyzzy: build/xyzzy-full
 	$(STRIP) -s -R '.note*' -R '.comment*' -o $@ $<
@@ -35,7 +36,7 @@ build/%.o: src/%.c | build
 
 src/%.frs.h src/%.frs.c: src/%.frs frobnicate script/frobstrings.py
 	script/frobstrings.py -o src/$*.frs.c -h src/$*.frs.h src/$*.frs || \
-	{ rm -f autosrc/$*.frs.h autosrc/$*.frs.c; false; }
+	{ rm -f src/$*.frs.h src/$*.frs.c; false; }
 
 clean:
 	rm -rf build src/*.frs.[ch] .deps.mk frobnicate xyzzy

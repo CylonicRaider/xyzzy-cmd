@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 #keytype uint32_t
+#lentype size_t
 #chartype char
 
 #includehdr ..
