@@ -3,6 +3,11 @@ KLIBC = /usr/lib/klibc
 CC = gcc
 LD = gcc
 STRIP = strip
+
+ifneq ($(strip $(GLIBC)),)
+CFLAGS = -Wall -Werror
+LDFLAGS =
+else
 # The -iwithprefix apparently magically adds the GCC include directory
 # into the path.
 CFLAGS = -O2 -g -std=c99 -flto -Wall -Werror -D__KLIBC__ -D_BITSIZE=64 \
@@ -11,6 +16,7 @@ CFLAGS = -O2 -g -std=c99 -flto -Wall -Werror -D__KLIBC__ -D_BITSIZE=64 \
     -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables
 LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
     $(KLIBC)/lib/crt0.o -lc -Wl,--gc-sections
+endif
 
 .PHONY: clean
 # Implicit rules create a cyclic dependency between %.frs and %.frs.c.
