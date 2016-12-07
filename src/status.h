@@ -5,9 +5,13 @@
 #define STATUS_ENABLED  1 /* Whether the status is enabled */
 #define STATUS_UNLOCKED 2 /* Whether the status is not locked to 0 */
 
+#define _STATUS_MASK 3
+
 #define STATUSCTL_DISABLE 1 /* Disable the status */
 #define STATUSCTL_ENABLE  2 /* Enable the status */
 #define STATUSCTL_FORCE   4 /* Force enabling (break lock) */
+
+#define _STATUSCTL_MASK 7
 
 #define STATUSRES_ERROR -1 /* Generic failure (see errno for details) */
 #define STATUSRES_INVAL -2 /* Invalid argument for statusctl() */

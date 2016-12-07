@@ -3,8 +3,11 @@
 
 #include "userhash.h"
 
+/* Initial capacity indeed */
 #define BASE_CAPACITY 17
+/* Multiplied by that */
 #define CAPACITY_INCR 3
+/* (1 - 1/LOAD_THRESHOLD) is the actual value */
 #define LOAD_THRESHOLD 3
 
 static inline size_t hash(uid_t uid, size_t reduce) {
@@ -64,7 +67,7 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid) {
         free(node);
         return NULL;
     }
-    if (ht->datacount * LOAD_THRESHOLD > ht->datacap) {
+    if ((ht->datacap - ht->datacount) * LOAD_THRESHOLD > ht->datacap) {
         size_t newcap = ht->datacap * CAPACITY_INCR, i;
         struct uhnode **newdata = calloc(newcap, sizeof(struct uhnode *));
         if (newdata == NULL) {

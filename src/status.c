@@ -9,8 +9,7 @@ int status_init(struct status *st) {
 }
 
 int statusctl(struct status *st, int command) {
-    if (command & ~(STATUSCTL_ENABLE | STATUSCTL_DISABLE |
-                    STATUSCTL_FORCE)) {
+    if (command & ~_STATUSCTL_MASK) {
         return STATUSRES_INVAL;
     } else if (command & STATUSCTL_ENABLE && command & STATUSCTL_DISABLE) {
         return STATUSRES_INVAL;
