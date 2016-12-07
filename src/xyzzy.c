@@ -36,7 +36,6 @@ int main(int argc, char *argv[]) {
     char *buf = NULL;
     size_t len = 0;
     init_strings();
-    puts(hello);
     notes[0] = note_read(STDIN_FILENO, notes[0]);
     if (notes[0] == NULL) return 1;
     notes[1] = notes[0];

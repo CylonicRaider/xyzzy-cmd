@@ -16,15 +16,9 @@
 dev_urandom = "/dev/urandom";
 etc_passwd = "/etc/passwd";
 
-/* Various strings for notes */
+/* Note format string */
 notes_format = "From: %s (%d)\n"
     "Date: %d-%02d-%02d %02d:%02d:%02d.%02d Z\n";
-
-/* Function name in main */
-note_print_name = "note_print";
-
-/* Test vector */
-hello = "Hello World!";
 
 #listdef strings
 
