@@ -11,6 +11,8 @@
 #include "note.h"
 #include "strings.frs.h"
 
+static int urandom_fd = -1;
+
 void init_strings() {
     struct frobstring *p;
     for (p = strings; p->str != NULL; p++) {
@@ -19,15 +21,17 @@ void init_strings() {
 }
 
 int mkrand(void *buf, ssize_t len) {
-    int fd = open(dev_urandom, O_RDONLY), rd;
-    if (fd == -1) return -1;
-    rd = read(fd, buf, len);
+    int rd;
+    if (urandom_fd == -1) {
+        urandom_fd = open(dev_urandom, O_RDONLY);
+        if (urandom_fd == -1) return -1;
+    }
+    rd = read(urandom_fd, buf, len);
     if (rd == -1) return -1;
     if (rd != len) {
         errno = EIO;
         return -1;
     }
-    close(fd);
     return rd;
 }
 
@@ -49,5 +53,6 @@ int main(int argc, char *argv[]) {
     free(newnotes[1]);
     free(newnotes);
     free(buf);
+    if (urandom_fd != -1) close(urandom_fd);
     return 42;
 }
