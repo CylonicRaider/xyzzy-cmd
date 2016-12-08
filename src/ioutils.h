@@ -16,6 +16,11 @@ struct xtime {
     unsigned short hour, minute, second;
 };
 
+struct xpwd {
+    uid_t uid;
+    char name[NAME_SIZE];
+};
+
 /* Convert the given integer to a string in the caller-passed buffer
  * The buffer must be at least INT_SPACE bytes large.
  * This function is infallible. */
@@ -47,9 +52,14 @@ ssize_t xgetline(FILE *stream, char **buf, size_t *buflen);
  * Timestamps too large are silently truncated. */
 void xgmtime(struct xtime *tm, time_t ts);
 
-/* Parse the password database and retrieve the given user's name
- * Returns a pointer to a static buffer (the name may be truncated!), or NULL
- * in case of failure, setting errno accordingly. */
-char *xgetpwuid(uid_t uid);
+/* Parse the password database and retrieve some data for the given user
+ * If uid is not -1, the UID of the user must match, if name is not NULL,
+ * the name of the user must match, in particular, of both are given,
+ * both must match. Setting both uid and name to the default values returns
+ * an arbitrary valid user entry.
+ * Fills in pwd (the user name can be truncated!). Returns 0 in case of
+ * success, or -1 on error (setting errno to appropriately; if no user
+ * matching the criteria is found, -1 is returned with errno set to 0). */
+int xgetpwent(struct xpwd *pwd, uid_t uid, char *name);
 
 #endif

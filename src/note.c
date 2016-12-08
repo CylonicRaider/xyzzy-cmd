@@ -52,17 +52,20 @@ int note_print(int fd, const struct note *note) {
     FILE *stream;
     int nfd;
     struct xtime tm;
-    char *name;
+    struct xpwd pwd;
     nfd = dup(fd);
     if (nfd == -1) return -1;
     stream = fdopen(nfd, "w");
     if (stream == NULL) return -1;
-    name = xgetpwuid(note->sender);
-    if (name == NULL) return -1;
+    if (xgetpwent(&pwd, note->sender, NULL) == -1) {
+        if (errno != 0) goto error;
+        strcpy(pwd.name, "???");
+    }
     xgmtime(&tm, note->time.tv_sec);
-    if (xprintf(stream, notes_format, name, (int) note->sender, (int) tm.year,
-                (int) tm.month, (int) tm.day, (int) tm.hour, (int) tm.minute,
-                (int) tm.second, (int) (note->time.tv_usec / 1000)) < 0)
+    if (xprintf(stream, notes_format, pwd.name, (int) note->sender,
+                (int) tm.year, (int) tm.month, (int) tm.day,
+                (int) tm.hour, (int) tm.minute, (int) tm.second,
+                (int) (note->time.tv_usec / 1000)) < 0)
         goto error;
     if (fwrite(note->content, 1, note->length, stream) != note->length)
         goto error;

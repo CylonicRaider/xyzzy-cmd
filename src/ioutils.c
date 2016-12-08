@@ -151,14 +151,14 @@ void xgmtime(struct xtime *tm, time_t ts) {
     tm->year = yoe + era * 400 + (tm->month <= 2);
 }
 
-char *xgetpwuid(uid_t uid) {
-    static char namebuf[NAME_SIZE], uidbuf[INT_SPACE];
-    char *line = NULL, *ret = NULL;
+int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
+    char uidbuf[INT_SPACE], *line = NULL;
+    int fuid, ret = -1;
     size_t linebuflen = 0;
     FILE *f = fopen(etc_passwd, "r");
-    if (f == NULL) return NULL;
+    if (f == NULL) return -1;
     /* Expected to not compile if uid_t cannot be converted to int */
-    xitoa(uidbuf, uid);
+    if (uid != -1) xitoa(uidbuf, uid);
     for (;;) {
         ssize_t linelen = xgetline(f, &line, &linebuflen);
         char *p, *end = line + linelen, *uidstr = NULL, *namestr = NULL;
@@ -182,15 +182,22 @@ char *xgetpwuid(uid_t uid) {
         /* Terminate UID */
         *p = 0;
         /* Compare UID-s */
-        if (strcmp(uidstr, uidbuf) != 0) continue;
+        if (uid != -1 && strcmp(uidstr, uidbuf) != 0) continue;
+        /* Compare names */
+        if (name != NULL && strcmp(namestr, name) != 0) continue;
+        /* Decode UID */
+        errno = 0;
+        fuid = strtol(uidstr, &end, 10);
+        if (*end || errno) return -1;
         /* Copy name into buffer */
-        strncpy(namebuf, namestr, sizeof(namebuf) - 1);
-        namebuf[sizeof(namebuf) - 1] = 0;
+        strncpy(pwd->name, namestr, sizeof(pwd->name) - 1);
+        pwd->name[sizeof(pwd->name) - 1] = 0;
+        pwd->uid = fuid;
         /* Done */
-        ret = namebuf;
+        ret = 0;
         goto end;
     }
-    errno = ENOENT;
+    errno = 0;
     end:
         free(line);
         fclose(f);
