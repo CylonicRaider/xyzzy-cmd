@@ -5,7 +5,6 @@
 #include <sys/wait.h>
 
 #include "comm.h"
-#include "die.h"
 #include "server.h"
 
 int server_listen() {
