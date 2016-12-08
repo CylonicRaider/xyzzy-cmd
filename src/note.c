@@ -35,7 +35,10 @@ struct note *note_read(int fd, struct note *note) {
             if (note == NULL) goto error;
         }
         rd = read(fd, note->content + note->length, buflen - note->length);
-        if (rd == -1) goto error;
+        if (rd == -1) {
+            if (errno == EINTR) continue;
+            goto error;
+        }
         if (rd == 0) break;
         note->length += rd;
     }

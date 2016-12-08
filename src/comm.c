@@ -22,7 +22,10 @@ ssize_t read_exactly(int fd, void *buf, size_t len) {
     if (len == 0) return 0;
     while (ret != len) {
         ssize_t rd = read(fd, ptr + ret, len - ret);
-        if (rd == -1) return -1;
+        if (rd == -1) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
         if (rd == 0) break;
         ret += rd;
     }
@@ -35,7 +38,10 @@ ssize_t write_exactly(int fd, void *buf, size_t len) {
     if (len == 0) return 0;
     while (ret != len) {
         ssize_t wr = write(fd, ptr + ret, len - ret);
-        if (wr == -1) return -1;
+        if (wr == -1) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
         if (wr == 0) {
             errno = EBUSY;
             return -1;

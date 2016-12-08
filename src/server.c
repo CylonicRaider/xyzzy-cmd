@@ -2,6 +2,7 @@
 #define _BSD_SOURCE
 #include <errno.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "comm.h"
 #include "die.h"
@@ -28,15 +29,24 @@ int server_main(srvhandler_t handler) {
     for (;;) {
         int pid;
         fd = accept(sockfd, NULL, NULL);
-        if (fd == -1) goto error;
-        pid = fork();
-        if (pid == -1) goto error;
-        if (pid == 0) {
-            int ret = (*handler)(fd);
-            _exit((ret == 0) ? 0 : 1);
-            return -1;
+        if (fd == -1 && errno != EINTR) goto error;
+        if (fd != -1) {
+            pid = fork();
+            if (pid == -1) goto error;
+            if (pid == 0) {
+                int ret = (*handler)(fd);
+                _exit((ret == 0) ? 0 : 1);
+                return -1;
+            }
+            fd = -1;
         }
-        fd = -1;
+        /* Do not summon zombies */
+        for (;;) {
+            if (waitpid(-1, NULL, WNOHANG) == -1) {
+                if (errno == ECHILD) break;
+                goto error;
+            }
+        }
     }
     error:
         close(sockfd);
