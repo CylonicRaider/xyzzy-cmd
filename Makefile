@@ -29,11 +29,6 @@ xyzzy: build/xyzzy-full
 frobnicate build/xyzzy-full:
 	$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-frobnicate: build/frobnicate.o build/frobnicate-main.o
-build/xyzzy-full: build/strings.frs.o build/frobnicate.o build/status.o \
-    build/ioutils.o build/note.o build/userhash.o build/comm.o \
-    build/server.o build/client.o build/xyzzy.o
-
 build:
 	mkdir -p $@
 
@@ -50,6 +45,7 @@ clean:
 # Be less noisy.
 .deps.mk: $(filter-out %.frs.c %.frs.h,$(wildcard src/*.[ch])) src/*.frs \
     script/makedeps.py
-	@script/makedeps.py $^ > $@
+	@script/makedeps.py $^ frobnicate:build/frobnicate-main.o \
+	build/xyzzy-full:build/xyzzy.o > $@
 
 -include .deps.mk
