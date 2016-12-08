@@ -1,10 +1,13 @@
 
-#include "die.h"
-#include "frobnicate.h"
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+
+#include "frobnicate.h"
+
+#define die(msg) do { fprintf(stderr, "%s\n", msg); _exit(1); } while (0)
+#define die_err(msg) do { perror(msg); _exit(1); } while (0)
 
 union numbuf {
     uint32_t num;
