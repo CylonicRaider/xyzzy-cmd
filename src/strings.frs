@@ -13,6 +13,8 @@
 #listkeys
 #listdecl frobstring
 
+PROGNAME = "xyzzy";
+
 /* System files */
 dev_urandom = "/dev/urandom";
 etc_passwd = "/etc/passwd";
@@ -20,6 +22,18 @@ etc_passwd = "/etc/passwd";
 /* Note format string */
 notes_format = "From: %s (%d)\n"
     "Date: %d-%02d-%02d %02d:%02d:%02d.%02d Z\n";
+
+/* Command-line arguments */
+cmd_help = "--help";
+cmd_on = "on";
+cmd_off = "off";
+cmd_status = "status";
+cmd_read = "read";
+cmd_write = "write";
+cmd_ping = "ping";
+
+usage_tmpl = "USAGE: %s %s";
+usage_list = "[help|on|off|status|read|write|ping]\n";
 
 #listdef strings
 
