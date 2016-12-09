@@ -11,6 +11,7 @@
 #include "frobnicate.h"
 #include "server.h"
 #include "strings.frs.h"
+#include "xyzzy.h"
 
 static int urandom_fd = -1;
 
