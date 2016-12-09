@@ -6,6 +6,7 @@
 # Temporary build files
 /build/
 # Auto-generated source files
-/src/*.frs.[ch]
+/src/*.frs.c
+/inc/*.frs.h
 # Dependency map
 /.deps.mk
