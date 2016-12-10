@@ -8,8 +8,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "client.h"
+#include "comm.h"
 #include "frobnicate.h"
 #include "ioutils.h"
+#include "server.h"
+#include "status.h"
 #include "strings.frs.h"
 #include "xyzzy.h"
 
@@ -37,8 +41,29 @@ int mkrand(void *buf, ssize_t len) {
     return rd;
 }
 
+int send_msg_rnd(int fd, char *buf, size_t buflen) {
+    struct message msg = { 0, buflen, buf };
+    if (mkrand(&msg.key, sizeof(msg.key)) == -1)
+        return -1;
+    return send_message(fd, &msg, 0);
+}
+int recv_msg_rnd(int fd, char **buf, size_t *buflen) {
+    struct message msg = {};
+    if (recv_message(fd, &msg, 0) == -1)
+        return -1;
+    *buflen = msg.length;
+    *buf = msg.data;
+    return 0;
+}
+
+int server_handler(int fd) {
+    close(fd);
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     enum main_action act = ERROR;
+    int statusact = 0, sockfd;
     init_strings();
     if (argc <= 1) {
         act = STATUS;
@@ -47,9 +72,11 @@ int main(int argc, char *argv[]) {
         xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
         return 0;
     } else if (strcmp(argv[1], cmd_on) == 0) {
-        act = ON;
+        act = STATUS;
+        statusact = STATUSCTL_ENABLE;
     } else if (strcmp(argv[1], cmd_off) == 0) {
-        act = OFF;
+        act = STATUS;
+        statusact = STATUSCTL_DISABLE;
     } else if (strcmp(argv[1], cmd_status) == 0) {
         act = STATUS;
     } else if (strcmp(argv[1], cmd_read) == 0) {
@@ -62,7 +89,17 @@ int main(int argc, char *argv[]) {
         xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
         return 1;
     }
-    xprintf(stdout, "%d\n", act);
+    sockfd = client_connect();
+    if (sockfd == -1) {
+        if (errno != ECONNREFUSED)
+            return EXIT_ERRNO;
+        if (server_spawn(argc, argv, &server_handler) == -1)
+            return EXIT_ERRNO;
+        sockfd = client_connect();
+        if (sockfd == -1)
+            return EXIT_ERRNO;
+    }
+    xprintf(stdout, "%d %d\n", act, statusact);
     if (urandom_fd != -1) close(urandom_fd);
     return 1;
 }
