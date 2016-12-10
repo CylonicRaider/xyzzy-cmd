@@ -29,20 +29,14 @@ int server_main(srvhandler_t handler, int ipipe) {
     if (sockfd == -1) return -1;
     if (ipipe != -1) close(ipipe);
     for (;;) {
-        int pid;
         fd = accept(sockfd, NULL, NULL);
         if (fd == -1 && errno != EINTR) goto error;
         if (fd != -1) {
-            pid = fork();
-            if (pid == -1) goto error;
-            if (pid == 0) {
-                int ret = (*handler)(fd);
-                _exit((ret == 0) ? 0 : 1);
-                return -1;
-            }
+            (*handler)(fd);
             fd = -1;
         }
-        /* Do not summon zombies */
+        /* Do not summon zombies
+         * Just in case. */
         for (;;) {
             if (waitpid(-1, NULL, WNOHANG) == -1) {
                 if (errno == ECHILD) break;
@@ -51,8 +45,8 @@ int server_main(srvhandler_t handler, int ipipe) {
         }
     }
     error:
-        close(sockfd);
         if (fd != -1) close(fd);
+        close(sockfd);
         return -1;
 }
 
