@@ -56,7 +56,7 @@ int recv_msg_rnd(int fd, char **buf, size_t *buflen) {
     return 0;
 }
 
-int server_handler(int fd) {
+int server_handler(int fd, void *data) {
     close(fd);
     return 0;
 }
@@ -91,9 +91,11 @@ int main(int argc, char *argv[]) {
     }
     sockfd = client_connect();
     if (sockfd == -1) {
+        struct userhash uh;
         if (errno != ECONNREFUSED)
             return EXIT_ERRNO;
-        if (server_spawn(argc, argv, &server_handler) == -1)
+        userhash_init(&uh);
+        if (server_spawn(argc, argv, &server_handler, &uh) == -1)
             return EXIT_ERRNO;
         sockfd = client_connect();
         if (sockfd == -1)

@@ -23,7 +23,7 @@ int server_listen() {
         return -1;
 }
 
-int server_main(srvhandler_t handler, int ipipe) {
+int server_main(srvhandler_t handler, void *data, int ipipe) {
     int sockfd, fd = -1;
     sockfd = server_listen();
     if (sockfd == -1) return -1;
@@ -32,7 +32,7 @@ int server_main(srvhandler_t handler, int ipipe) {
         fd = accept(sockfd, NULL, NULL);
         if (fd == -1 && errno != EINTR) goto error;
         if (fd != -1) {
-            (*handler)(fd);
+            (*handler)(fd, data);
             fd = -1;
         }
         /* Do not summon zombies
@@ -50,7 +50,7 @@ int server_main(srvhandler_t handler, int ipipe) {
         return -1;
 }
 
-int server_spawn(int argc, char *argv[], srvhandler_t handler) {
+int server_spawn(int argc, char *argv[], srvhandler_t handler, void *data) {
     char *p, buf[1];
     int pid, fd, ret, pipefds[2];
     /* Create communication pipe */
@@ -89,7 +89,7 @@ int server_spawn(int argc, char *argv[], srvhandler_t handler) {
     if (pid < 0) _exit(1);
     if (pid != 0) _exit(0);
     /* Run main loop */
-    ret = server_main(handler, pipefds[1]);
+    ret = server_main(handler, data, pipefds[1]);
     /* Done */
     _exit((ret == 0) ? 0 : 1);
     return -1;
