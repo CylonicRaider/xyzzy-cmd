@@ -1,5 +1,5 @@
 
-#define _BSD_SOURCE
+#define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -12,11 +12,16 @@
 int server_listen() {
     struct sockaddr_un addr;
     socklen_t addrlen;
+    int one = 1;
     int ret = socket(AF_UNIX, SOCK_STREAM, 0);
     if (ret == -1) return -1;
     prepare_address(&addr, &addrlen);
-    if (bind(ret, (void *) &addr, addrlen) == -1) goto error;
-    if (listen(ret, SOMAXCONN) == -1) goto error;
+    if (bind(ret, (void *) &addr, addrlen) == -1)
+        goto error;
+    if (listen(ret, SOMAXCONN) == -1)
+        goto error;
+    if (setsockopt(ret, SOL_SOCKET, SO_PASSCRED, &one, sizeof(one)) == -1)
+        goto error;
     return ret;
     error:
         close(ret);

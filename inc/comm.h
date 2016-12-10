@@ -8,13 +8,15 @@
 #include <sys/un.h>
 
 #define COMM_NOSCRAMBLE 1 /* Do not (de)scramble the data automatically */
+#define COMM_PEERAUTH   2 /* Send/receive authentication of peer */
 
-#define _COMM_MASK 1 /* Allowed COMM_* values */
+#define _COMM_MASK 3 /* Allowed COMM_* values */
 
 struct message {
     uint32_t key;
     uint32_t length;
     void *data;
+    uid_t sender;
 };
 
 union intcast {
