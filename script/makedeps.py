@@ -91,6 +91,7 @@ def main():
         l = get_deps(f, basedir, cache)
         if not l: continue
         print (SOURCE_RE.sub(OBJECT_SUB, f) + ': ' + ' '.join(l))
+    print ('')
     for p in proglist:
         l = set()
         for f in progs[p]:
