@@ -16,6 +16,7 @@
 PROGNAME = "xyzzy";
 
 /* System files */
+dev_null = "/dev/null";
 dev_urandom = "/dev/urandom";
 etc_passwd = "/etc/passwd";
 

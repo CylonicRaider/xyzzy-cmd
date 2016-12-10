@@ -3,7 +3,9 @@
 #define _IOUTILS_H
 
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 #define DECSPACE(type) (sizeof(type) * CHAR_BIT / 3 + 4)
 #define INT_SPACE DECSPACE(int)

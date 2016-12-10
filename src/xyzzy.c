@@ -101,5 +101,5 @@ int main(int argc, char *argv[]) {
     }
     xprintf(stdout, "%d %d\n", act, statusact);
     if (urandom_fd != -1) close(urandom_fd);
-    return 1;
+    return 0;
 }

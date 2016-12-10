@@ -13,9 +13,11 @@ typedef int (*srvhandler_t)(int fd);
 int server_listen(void);
 
 /* Run the server main loop
+ * ipipe, if not -1, is close()d after the server socket is set up, allowing
+ * e.g. parent processes to gain knowledge of the event.
  * Returns zero on successful termination (if that happens), and -1 on
  * error, setting errno appropriately. */
-int server_main(srvhandler_t handler);
+int server_main(srvhandler_t handler, int ipipe);
 
 /* Spawn the server in a separate process
  * Expects the argc and argv values from main().
