@@ -15,6 +15,7 @@
 #include "server.h"
 #include "status.h"
 #include "strings.frs.h"
+#include "userhash.h"
 #include "xyzzy.h"
 
 static int urandom_fd = -1;

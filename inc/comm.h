@@ -36,13 +36,7 @@ ssize_t read_exactly(int fd, void *buf, size_t len);
  * Returns the amount of bytes written (i.e. len), or -1 on error (having
  * errno set); if a single system call writes zero bytes, EBUSY is raised.
  * If len is zero, this returns instant success. */
-ssize_t write_exactly(int fd, void *buf, size_t len);
-
-/* Send a message into the given file descriptor
- * Flags is a bitwise OR of COMM_* constants (or zero).
- * Returns the amount of bytes read, or -1 on error (setting errno).
- * NOTE that this can use multiple system calls. */
-ssize_t send_message(int fd, const struct message *msg, int flags);
+ssize_t write_exactly(int fd, const void *buf, size_t len);
 
 /* Receive a message from the given file descriptor
  * Flags is a bitwise OR of COMM_* constants (or zero).
@@ -51,5 +45,11 @@ ssize_t send_message(int fd, const struct message *msg, int flags);
  *      may not align with that of send_message() (i.e. don't use those
  *      on packet sockets). */
 ssize_t recv_message(int fd, struct message *msg, int flags);
+
+/* Send a message into the given file descriptor
+ * Flags is a bitwise OR of COMM_* constants (or zero).
+ * Returns the amount of bytes read, or -1 on error (setting errno).
+ * NOTE that this can use multiple system calls. */
+ssize_t send_message(int fd, const struct message *msg, int flags);
 
 #endif

@@ -32,8 +32,8 @@ ssize_t read_exactly(int fd, void *buf, size_t len) {
     return ret;
 }
 
-ssize_t write_exactly(int fd, void *buf, size_t len) {
-    char *ptr = buf;
+ssize_t write_exactly(int fd, const void *buf, size_t len) {
+    const char *ptr = buf;
     ssize_t ret = 0;
     if (len == 0) return 0;
     while (ret != len) {
@@ -48,25 +48,6 @@ ssize_t write_exactly(int fd, void *buf, size_t len) {
         }
         ret += wr;
     }
-    return ret;
-}
-
-ssize_t send_message(int fd, const struct message *msg, int flags) {
-    char *buf;
-    ssize_t ret = -1;
-    if (flags & ~_COMM_MASK) {
-        errno = EINVAL;
-        return -1;
-    }
-    buf = malloc(msg->length + 8);
-    if (buf == NULL) return -1;
-    ((union intcast *) buf)[0].num = htonl(msg->key);
-    ((union intcast *) buf)[1].num = htonl(msg->length);
-    memcpy(buf + 8, msg->data, msg->length);
-    if (! (flags & COMM_NOSCRAMBLE))
-        frobl(msg->key, buf + 8, buf + 8, msg->length);
-    ret = write_exactly(fd, buf, msg->length + 8);
-    free(buf);
     return ret;
 }
 
@@ -103,5 +84,24 @@ ssize_t recv_message(int fd, struct message *msg, int flags) {
         if (! (flags & COMM_NOSCRAMBLE))
             defrobl(msg->key, msg->data, msg->data, msg->length);
     }
+    return ret;
+}
+
+ssize_t send_message(int fd, const struct message *msg, int flags) {
+    char *buf;
+    ssize_t ret = -1;
+    if (flags & ~_COMM_MASK) {
+        errno = EINVAL;
+        return -1;
+    }
+    buf = malloc(msg->length + 8);
+    if (buf == NULL) return -1;
+    ((union intcast *) buf)[0].num = htonl(msg->key);
+    ((union intcast *) buf)[1].num = htonl(msg->length);
+    memcpy(buf + 8, msg->data, msg->length);
+    if (! (flags & COMM_NOSCRAMBLE))
+        frobl(msg->key, buf + 8, buf + 8, msg->length);
+    ret = write_exactly(fd, buf, msg->length + 8);
+    free(buf);
     return ret;
 }

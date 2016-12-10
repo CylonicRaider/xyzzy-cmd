@@ -29,7 +29,7 @@ int userhash_init(struct userhash *ht);
 void userhash_del(struct userhash *ht);
 
 /* Return the specified node from the hash, or NULL if none */
-struct uhnode *userhash_get(struct userhash *ht, uid_t uid);
+struct uhnode *userhash_get(const struct userhash *ht, uid_t uid);
 /* Return the specified node from the hash (allocating if necesssary)
  * Returns NULL on error. */
 struct uhnode *userhash_make(struct userhash *ht, uid_t uid);

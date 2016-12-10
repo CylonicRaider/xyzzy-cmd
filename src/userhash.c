@@ -47,7 +47,7 @@ void userhash_del(struct userhash *ht) {
     }
 }
 
-struct uhnode *userhash_get(struct userhash *ht, uid_t uid) {
+struct uhnode *userhash_get(const struct userhash *ht, uid_t uid) {
     size_t h = hash(uid, ht->datacap);
     struct uhnode *node;
     for (node = ht->data[h]; node != NULL; node = node->next) {
