@@ -7,6 +7,7 @@
 
 #include "comm.h"
 #include "frobnicate.h"
+#include "ioutils.h"
 #include "strings.frs.h"
 
 void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen) {
@@ -14,41 +15,6 @@ void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen) {
     addr->sun_path[0] = 0;
     memcpy(addr->sun_path + 1, socket_addr, sizeof(socket_addr) - 2);
     *addrlen = sizeof(sa_family_t) + sizeof(socket_addr) - 1;
-}
-
-ssize_t read_exactly(int fd, void *buf, size_t len) {
-    char *ptr = buf;
-    ssize_t ret = 0;
-    if (len == 0) return 0;
-    while (ret != len) {
-        ssize_t rd = read(fd, ptr + ret, len - ret);
-        if (rd == -1) {
-            if (errno == EINTR) continue;
-            return -1;
-        }
-        if (rd == 0) break;
-        ret += rd;
-    }
-    return ret;
-}
-
-ssize_t write_exactly(int fd, const void *buf, size_t len) {
-    const char *ptr = buf;
-    ssize_t ret = 0;
-    if (len == 0) return 0;
-    while (ret != len) {
-        ssize_t wr = write(fd, ptr + ret, len - ret);
-        if (wr == -1) {
-            if (errno == EINTR) continue;
-            return -1;
-        }
-        if (wr == 0) {
-            errno = EBUSY;
-            return -1;
-        }
-        ret += wr;
-    }
-    return ret;
 }
 
 ssize_t recv_message(int fd, struct message *msg, int flags) {

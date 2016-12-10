@@ -2,7 +2,6 @@
 #ifndef _NOTE_H
 #define _NOTE_H
 
-#include <stdio.h>
 #include <stddef.h>
 #include <sys/time.h>
 #include <sys/types.h>

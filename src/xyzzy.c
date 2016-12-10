@@ -3,7 +3,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -70,7 +69,7 @@ int main(int argc, char *argv[]) {
         act = STATUS;
     } else if (strcmp(argv[1], cmd_help) == 0 ||
                strcmp(argv[1], cmd_help + 2) == 0) {
-        xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
+        xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
         return 0;
     } else if (strcmp(argv[1], cmd_on) == 0) {
         act = STATUS;
@@ -87,7 +86,7 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], cmd_ping) == 0) {
         act = PING;
     } else {
-        xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
+        xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
         return 1;
     }
     sockfd = client_connect();
@@ -100,7 +99,7 @@ int main(int argc, char *argv[]) {
         if (sockfd == -1)
             return EXIT_ERRNO;
     }
-    xprintf(stdout, "%d %d\n", act, statusact);
+    xprintf(STDOUT_FILENO, "%d %d\n", act, statusact);
     if (urandom_fd != -1) close(urandom_fd);
     return 0;
 }

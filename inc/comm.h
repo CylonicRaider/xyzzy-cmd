@@ -26,18 +26,6 @@ union intcast {
  * An infallible convenience function. */
 void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen);
 
-/* Read exactly len bytes from fd, taking as many attempts as necessary
- * Returns the amount of bytes read (less than len on EOF), or -1 on error
- * (having errno set).
- * If len is zero, this returns instant success. */
-ssize_t read_exactly(int fd, void *buf, size_t len);
-
-/* Write exactly len bytes to fd
- * Returns the amount of bytes written (i.e. len), or -1 on error (having
- * errno set); if a single system call writes zero bytes, EBUSY is raised.
- * If len is zero, this returns instant success. */
-ssize_t write_exactly(int fd, const void *buf, size_t len);
-
 /* Receive a message from the given file descriptor
  * Flags is a bitwise OR of COMM_* constants (or zero).
  * Returns the amount of bytes written, or -1 on error (setting errno).

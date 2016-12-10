@@ -1,8 +1,8 @@
 
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,7 +36,52 @@ void xitoa(char *buf, int i) {
     *dp = 0;
 }
 
-ssize_t xprintf(FILE *stream, const char *fmt, ...) {
+ssize_t read_exactly(int fd, void *buf, size_t len) {
+    char *ptr = buf;
+    ssize_t ret = 0;
+    if (len == 0) return 0;
+    while (ret != len) {
+        ssize_t rd = read(fd, ptr + ret, len - ret);
+        if (rd == -1) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        if (rd == 0) break;
+        ret += rd;
+    }
+    return ret;
+}
+
+ssize_t write_exactly(int fd, const void *buf, size_t len) {
+    const char *ptr = buf;
+    ssize_t ret = 0;
+    if (len == 0) return 0;
+    while (ret != len) {
+        ssize_t wr = write(fd, ptr + ret, len - ret);
+        if (wr == -1) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        if (wr == 0) {
+            errno = EBUSY;
+            return -1;
+        }
+        ret += wr;
+    }
+    return ret;
+}
+
+int xputc(int fd, int ch) {
+    char buf[1] = { ch };
+    if (write_exactly(fd, buf, 1) == -1) return -1;
+    return ch;
+}
+
+ssize_t xputs(int fd, const char *string) {
+    return write_exactly(fd, string, strlen(string));
+}
+
+ssize_t xprintf(int fd, const char *fmt, ...) {
     size_t written = 0;
     char numbuf[INT_SPACE];
     va_list ap;
@@ -49,7 +94,7 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...) {
         while (*fmt && *fmt != '%') fmt++;
         if (fmt != oldfmt) {
             outputlen = fmt - oldfmt;
-            if (fwrite(oldfmt, 1, outputlen, stream) != outputlen)
+            if (write_exactly(fd, oldfmt, outputlen) != outputlen)
                 return -1;
             written++;
         }
@@ -86,51 +131,49 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...) {
         outputlen = strlen(output);
         if (outputlen >= length) {
             written += outputlen;
-            if (fputs(output, stream) == EOF) return -1;
+            if (xputs(fd, output) == -1) return -1;
         } else if (flags & _XPRINTF_LEFT) {
             written += length;
-            if (fputs(output, stream) == EOF) return -1;
+            if (xputs(fd, output) == -1) return -1;
             for (; outputlen < length; length--)
-                if (putc(' ', stream) == EOF) return -1;
+                if (xputc(fd, ' ') == -1) return -1;
         } else if (flags & _XPRINTF_ZPAD) {
             written += length;
             for (; outputlen < length; length--)
-                if (putc('0', stream) == EOF) return -1;
-            if (fputs(output, stream) == EOF) return -1;
+                if (xputc(fd, '0') == -1) return -1;
+            if (xputs(fd, output) == -1) return -1;
         } else {
             written += length;
             for (; outputlen < length; length--)
-                if (putc(' ', stream) == EOF) return -1;
-            if (fputs(output, stream) == EOF) return -1;
+                if (xputc(fd, ' ') == -1) return -1;
+            if (xputs(fd, output) == -1) return -1;
         }
     }
     va_end(ap);
     return written;
 }
 
-ssize_t xgetline(FILE *stream, char **buf, size_t *buflen) {
-    ssize_t read = 0;
+ssize_t xgetline(int fd, char **buf, size_t *buflen) {
+    ssize_t nread = 0;
     if (*buf == NULL || *buflen < LINESIZE) {
         *buflen = LINESIZE;
         *buf = realloc(*buf, *buflen);
         if (*buf == NULL) return -1;
     }
     for (;;) {
-        int ch;
-        if (read == *buflen) {
+        ssize_t rd;
+        char rdbuf[1];
+        if (nread == *buflen) {
             *buflen *= 2;
             *buf = realloc(*buf, *buflen);
             if (*buf == NULL) return -1;
         }
-        ch = fgetc(stream);
-        if (ch == EOF || ch == '\n') {
-            if (ferror(stream)) return -1;
-            if (ch == EOF && read == 0) return -2;
-            break;
-        }
-        (*buf)[read++] = ch;
+        rd = read(fd, rdbuf, sizeof(rdbuf));
+        if (rd == -1) return -1;
+        if (rd == 0) return (nread) ? nread : -2;
+        if (*rdbuf == '\n') return nread;
+        (*buf)[nread++] = *rdbuf;
     }
-    return read;
 }
 
 void xgmtime(struct xtime *tm, time_t ts) {
@@ -155,12 +198,12 @@ int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
     char uidbuf[INT_SPACE], *line = NULL;
     int fuid, ret = -1;
     size_t linebuflen = 0;
-    FILE *f = fopen(etc_passwd, "r");
-    if (f == NULL) return -1;
+    int fd = open(etc_passwd, O_RDONLY);
+    if (fd == -1) return -1;
     /* Expected to not compile if uid_t cannot be converted to int */
     if (uid != -1) xitoa(uidbuf, uid);
     for (;;) {
-        ssize_t linelen = xgetline(f, &line, &linebuflen);
+        ssize_t linelen = xgetline(fd, &line, &linebuflen);
         char *p, *end = line + linelen, *uidstr = NULL, *namestr = NULL;
         if (linelen == -1) goto end;
         if (linelen == 0) continue;
@@ -200,6 +243,6 @@ int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
     errno = 0;
     end:
         free(line);
-        fclose(f);
+        close(fd);
         return ret;
 }

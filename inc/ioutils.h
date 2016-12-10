@@ -2,7 +2,6 @@
 #ifndef _IOUTILS_H
 #define _IOUTILS_H
 
-#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -28,6 +27,26 @@ struct xpwd {
  * This function is infallible. */
 void xitoa(char *buf, int i);
 
+/* Read exactly len bytes from fd, taking as many attempts as necessary
+ * Returns the amount of bytes read (less than len on EOF), or -1 on error
+ * (having errno set).
+ * If len is zero, this returns instant success. */
+ssize_t read_exactly(int fd, void *buf, size_t len);
+
+/* Write exactly len bytes to fd
+ * Returns the amount of bytes written (i.e. len), or -1 on error (having
+ * errno set); if a single system call writes zero bytes, EBUSY is raised.
+ * If len is zero, this returns instant success. */
+ssize_t write_exactly(int fd, const void *buf, size_t len);
+
+/* Write the given character to the given file descriptor
+ * Returns the character written, or -1 on error (having errno set). */
+int xputc(int fd, int ch);
+
+/* Write the given string to the given file descriptor
+ * Returns analogously to write_exactly(). */
+ssize_t xputs(int fd, const char *string);
+
 /* Write result of formatting fmt with additional arguments to stream
  * Returns the amount of bytes written on success, or -1 on error, setting
  * errno appropriately.
@@ -36,7 +55,7 @@ void xitoa(char *buf, int i);
  * %s -- char *
  * The space and minus flags and a field width are supported.
  * Who needs more? */
-ssize_t xprintf(FILE *stream, const char *fmt, ...);
+ssize_t xprintf(int fd, const char *fmt, ...);
 
 /* Read a whole line from the given stream
  * The given buffer *buf (with size buflen) is dynamically reallocated as
@@ -48,7 +67,7 @@ ssize_t xprintf(FILE *stream, const char *fmt, ...);
  * of failure (leaving buf and buflen in a consistent state, i.e. buf can
  * either be a buffer of size buflen, or NULL; and leaving the state of the
  * stream undefined). */
-ssize_t xgetline(FILE *stream, char **buf, size_t *buflen);
+ssize_t xgetline(int fd, char **buf, size_t *buflen);
 
 /* Break the given UNIX timestamp into its fields
  * Timestamps too large are silently truncated. */
