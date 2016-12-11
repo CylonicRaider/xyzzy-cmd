@@ -32,9 +32,13 @@ cmd_status = "status";
 cmd_read = "read";
 cmd_write = "write";
 cmd_ping = "ping";
+cmd_force = "-f";
 
-usage_tmpl = "USAGE: %s %s";
-usage_list = "[help|on|off|status|read|write|ping]\n";
+/* Usage messages */
+usage_tmpl = "USAGE: %s %s\n";
+usage_list = "[help|on|off|status|read|write|ping]";
+usage_onoff = "USAGE: %s %s [-f]\n";
+usage_write = "write <user>";
 
 #listdef strings
 
