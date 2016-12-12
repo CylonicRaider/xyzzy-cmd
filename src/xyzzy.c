@@ -47,12 +47,13 @@ int send_packet(int fd, char *buf, size_t buflen) {
         return -1;
     return send_message(fd, &msg, COMM_PEERAUTH);
 }
-int recv_packet(int fd, char **buf, size_t *buflen) {
+int recv_packet(int fd, char **buf, size_t *buflen, uid_t *uid) {
     struct message msg = { 0, 0, NULL, -1 };
     if (recv_message(fd, &msg, COMM_PEERAUTH) == -1)
         return -1;
     *buflen = msg.length;
     *buf = msg.data;
+    if (uid != NULL) *uid = msg.sender;
     return 0;
 }
 
