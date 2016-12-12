@@ -18,6 +18,7 @@
 #include "xyzzy.h"
 
 static int urandom_fd = -1;
+static int alarmed = 0;
 
 void init_strings() {
     struct frobstring *p;
@@ -57,9 +58,46 @@ int recv_packet(int fd, char **buf, size_t *buflen, uid_t *uid) {
     return 0;
 }
 
+void alarm_handler(int signo) {
+    alarmed = 1;
+}
+int install_handler(int enable) {
+    if (enable) {
+        struct sigaction act;
+        memset(&act, 0, sizeof(act));
+        sigemptyset(&act.sa_mask);
+        act.sa_handler = alarm_handler;
+        return sigaction(SIGALRM, &act, NULL);
+    } else {
+        return sigaction(SIGALRM, NULL, NULL);
+    }
+}
+
 int server_handler(int fd, void *data) {
-    close(fd);
-    return 0;
+    int ret = -1;
+    char *buf = NULL;
+    size_t buflen;
+    uid_t sender;
+    /* Header */
+    if (install_handler(1) == -1) goto abort;
+    alarm(1);
+    /* Actual handling */
+    if (recv_packet(fd, &buf, &buflen, &sender) == -1) goto abort;
+    if (buflen == 0) goto end;
+    if (*buf == CMD_PING) {
+        buf[0] = RSP_PING;
+        if (send_packet(fd, buf, 1) == -1) goto abort;
+    } else {
+        goto abort;
+    }
+    /* Footer */
+    end:
+        ret = 0;
+    abort:
+        if (install_handler(0) == -1) goto abort;
+        if (buf != NULL) free(buf);
+        close(fd);
+        return ret;
 }
 
 int main(int argc, char *argv[]) {
@@ -163,7 +201,22 @@ int main(int argc, char *argv[]) {
         if (sockfd == -1)
             return EXIT_ERRNO;
     }
-    /* NYI */
-    if (urandom_fd != -1) close(urandom_fd);
+    if (act == PING) {
+        char buf[1] = { CMD_PING }, *rbuf;
+        size_t rbuflen;
+        if (send_packet(sockfd, buf, sizeof(buf)) == -1)
+            return EXIT_ERRNO;
+        if (recv_packet(sockfd, &rbuf, &rbuflen, NULL) == -1)
+            return EXIT_ERRNO;
+        if (rbuflen == 0 || *rbuf != RSP_PING) {
+            xprintf(STDOUT_FILENO, msg_oops);
+            return 2;
+        } else {
+            xprintf(STDOUT_FILENO, msg_pong);
+        }
+    } else {
+        xprintf(STDERR_FILENO, msg_nyi);
+        return 1;
+    }
     return 0;
 }

@@ -4,7 +4,7 @@
 
 #include <errno.h>
 
-#define ERR_TO_EXIT(n) (128 + (n) % 64)
+#define ERR_TO_EXIT(n) (64 + (n) % 128)
 #define EXIT_ERRNO ERR_TO_EXIT(errno)
 
 #define MSG_RESERVED  0

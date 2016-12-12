@@ -43,6 +43,11 @@ usage_write = "write <user>";
 /* Error messages */
 error_nouser = "No such user: %s\n";
 
+/* Miscellaneous messages */
+msg_pong = "pong\n";
+msg_oops = "oops\n";
+msg_nyi = "NYI\n";
+
 #listdef strings
 
 /* Behold the true name of Ba'al the Soul Eater */

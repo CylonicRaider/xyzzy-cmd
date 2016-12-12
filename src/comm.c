@@ -100,14 +100,15 @@ ssize_t send_message(int fd, const struct message *msg, int flags) {
         frobl(msg->key, bufdesc.iov_base + 8, bufdesc.iov_base + 8,
               msg->length);
     if (flags & COMM_PEERAUTH) {
-        struct cmsghdr *cm = CMSG_FIRSTHDR(&hdr);
         // Assuming the system calls are infallible
         struct ucred creds = { getpid(), getuid(), getgid() };
+        struct cmsghdr *cm;
+        hdr.msg_controllen = CMSG_SPACE(sizeof(struct ucred));
+        cm = CMSG_FIRSTHDR(&hdr);
         cm->cmsg_len = CMSG_LEN(sizeof(struct ucred));
         cm->cmsg_level = SOL_SOCKET;
         cm->cmsg_type = SCM_CREDENTIALS;
         memcpy(CMSG_DATA(cm), &creds, sizeof(creds));
-        hdr.msg_controllen = CMSG_SPACE(sizeof(struct ucred));
         ret = sendmsg(fd, &hdr, 0);
         if (ret == -1) goto end;
     } else {
