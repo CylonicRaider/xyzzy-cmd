@@ -56,6 +56,41 @@ int recv_msg_rnd(int fd, char **buf, size_t *buflen) {
     return 0;
 }
 
+void *pack_packet(int type, void *data, size_t *length) {
+    const struct note *noteptrs[2];
+    char *ret;
+    switch (type) {
+        case CMD_PING: case RSP_PING: case CMD_READ:
+            *length = 1;
+            break;
+        case CMD_STATUS: case RSP_STATUS: case RSP_WRITE:
+            *length = sizeof(int);
+            break;
+        case CMD_WRITE:
+            noteptrs[0] = data;
+            noteptrs[1] = NULL;
+            ret = note_pack(NULL, length, 1, noteptrs);
+            if (ret == NULL) return NULL;
+            *ret = type;
+            return ret;
+        case RSP_READ:
+            ret = note_pack(NULL, length, 1, data);
+            if (ret == NULL) return NULL;
+            *ret = type;
+            return NULL;
+        default:
+            errno = EINVAL;
+            return NULL;
+    }
+    ret = malloc(*length);
+    if (ret == NULL) return NULL;
+    *ret = type;
+    if (type == CMD_STATUS || type == RSP_STATUS || type == RSP_WRITE) {
+        memcpy(ret + 1, data, sizeof(int));
+    }
+    return ret;
+}
+
 int server_handler(int fd, void *data) {
     close(fd);
     return 0;
