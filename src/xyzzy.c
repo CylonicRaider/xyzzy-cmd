@@ -41,21 +41,6 @@ int mkrand(void *buf, ssize_t len) {
     return rd;
 }
 
-int send_msg_rnd(int fd, char *buf, size_t buflen) {
-    struct message msg = { 0, buflen, buf };
-    if (mkrand(&msg.key, sizeof(msg.key)) == -1)
-        return -1;
-    return send_message(fd, &msg, 0);
-}
-int recv_msg_rnd(int fd, char **buf, size_t *buflen) {
-    struct message msg = {};
-    if (recv_message(fd, &msg, 0) == -1)
-        return -1;
-    *buflen = msg.length;
-    *buf = msg.data;
-    return 0;
-}
-
 void *pack_packet(int type, void *data, size_t *length) {
     const struct note *noteptrs[2];
     char *ret;
@@ -89,6 +74,21 @@ void *pack_packet(int type, void *data, size_t *length) {
         memcpy(ret + 1, data, sizeof(int));
     }
     return ret;
+}
+
+int send_packet(int fd, char *buf, size_t buflen) {
+    struct message msg = { 0, buflen, buf, -1 };
+    if (mkrand(&msg.key, sizeof(msg.key)) == -1)
+        return -1;
+    return send_message(fd, &msg, COMM_PEERAUTH);
+}
+int recv_packet(int fd, char **buf, size_t *buflen) {
+    struct message msg = { 0, 0, NULL, -1 };
+    if (recv_message(fd, &msg, COMM_PEERAUTH) == -1)
+        return -1;
+    *buflen = msg.length;
+    *buf = msg.data;
+    return 0;
 }
 
 int server_handler(int fd, void *data) {
