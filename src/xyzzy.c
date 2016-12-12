@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
     enum main_action act = NONE;
     int subact = 0, sockfd;
     char *user = NULL;
+    struct note *tosend = NULL;
     init_strings();
     if (argc <= 1) {
         act = STATUS;
@@ -130,6 +131,24 @@ int main(int argc, char *argv[]) {
         return (act == USAGE_OK) ? 0 : 1;
     } else if (act == XYZZY) {
         return -42;
+    } else if (act == WRITE) {
+        struct xpwd pw;
+        int uid, pwres;
+        char *end;
+        errno = 0;
+        uid = strtol(user, &end, 10);
+        if (errno != 0 || (*end && *end != ' ' && *end != '\t')) {
+            pwres = xgetpwent(&pw, -1, user);
+        } else {
+            pwres = xgetpwent(&pw, uid, NULL);
+        }
+        if (pwres == -1) {
+            if (errno == 0) xprintf(STDOUT_FILENO, error_nouser, user);
+            return EXIT_ERRNO;
+        }
+        tosend = note_read(STDIN_FILENO, NULL);
+        if (tosend == NULL) return EXIT_ERRNO;
+        tosend->sender = pw.uid;
     }
     sockfd = client_connect();
     if (sockfd == -1) {
@@ -143,11 +162,7 @@ int main(int argc, char *argv[]) {
         if (sockfd == -1)
             return EXIT_ERRNO;
     }
-    if (user == NULL) {
-        xprintf(STDOUT_FILENO, "%d %d\n", act, subact);
-    } else {
-        xprintf(STDOUT_FILENO, "%d %d (%s)\n", act, subact, user);
-    }
+    /* NYI */
     if (urandom_fd != -1) close(urandom_fd);
     return 0;
 }

@@ -40,6 +40,9 @@ usage_list = "[help|on|off|status|read|write|ping]";
 usage_onoff = "USAGE: %s %s [-f]\n";
 usage_write = "write <user>";
 
+/* Error messages */
+error_nouser = "No such user: %s\n";
+
 #listdef strings
 
 /* Behold the true name of Ba'al the Soul Eater */
