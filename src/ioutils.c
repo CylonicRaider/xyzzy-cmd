@@ -205,6 +205,7 @@ int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
     for (;;) {
         ssize_t linelen = xgetline(fd, &line, &linebuflen);
         char *p, *end = line + linelen, *uidstr = NULL, *namestr = NULL;
+        if (linelen == -2) break;
         if (linelen == -1) goto end;
         if (linelen == 0) continue;
         /* Ignore comments */
