@@ -63,7 +63,7 @@ int server_handler(int fd, void *data) {
 
 int main(int argc, char *argv[]) {
     enum main_action act = NONE;
-    int statusact = 0, sockfd;
+    int subact = 0, sockfd;
     char *user = NULL;
     init_strings();
     if (argc <= 1) {
@@ -79,17 +79,17 @@ int main(int argc, char *argv[]) {
         }
     } else if (strcmp(argv[1], cmd_on) == 0) {
         act = STATUS;
-        statusact = STATUSCTL_ENABLE;
+        subact = STATUSCTL_ENABLE;
         if (argc == 3 && strcmp(argv[2], cmd_force) == 0) {
-            statusact |= STATUSCTL_FORCE;
+            subact |= STATUSCTL_FORCE;
         } else if (argc >= 3) {
             act = USAGE;
         }
     } else if (strcmp(argv[1], cmd_off) == 0) {
         act = STATUS;
-        statusact = STATUSCTL_DISABLE;
+        subact = STATUSCTL_DISABLE;
         if (argc == 3 && strcmp(argv[2], cmd_force) == 0) {
-            statusact |= STATUSCTL_FORCE;
+            subact |= STATUSCTL_FORCE;
         } else if (argc >= 3) {
             act = USAGE;
         }
@@ -144,9 +144,9 @@ int main(int argc, char *argv[]) {
             return EXIT_ERRNO;
     }
     if (user == NULL) {
-        xprintf(STDOUT_FILENO, "%d %d\n", act, statusact);
+        xprintf(STDOUT_FILENO, "%d %d\n", act, subact);
     } else {
-        xprintf(STDOUT_FILENO, "%d %d (%s)\n", act, statusact, user);
+        xprintf(STDOUT_FILENO, "%d %d (%s)\n", act, subact, user);
     }
     if (urandom_fd != -1) close(urandom_fd);
     return 0;
