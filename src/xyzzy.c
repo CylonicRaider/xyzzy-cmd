@@ -87,6 +87,25 @@ int server_handler(int fd, void *data) {
     if (*buf == CMD_PING) {
         buf[0] = RSP_PING;
         if (send_packet(fd, buf, 1) == -1) goto abort;
+    } else if (*buf == CMD_STATUS) {
+        struct uhnode *node;
+        int cmd, res, count;
+        if (buflen != 1 + sizeof(int)) goto abort;
+        node = userhash_make(data, sender);
+        if (node == NULL) goto abort;
+        memcpy(&cmd, data + 1, sizeof(int));
+        count = uhnode_countnotes(node);
+        res = statusctl(&node->status, cmd);
+        buf = realloc(buf, 1 + 2 * sizeof(int));
+        if (buf == NULL) goto abort;
+        buf[0] = RSP_STATUS;
+        memcpy(buf + 1, &res, sizeof(int));
+        memcpy(buf + 1 + sizeof(int), &count, sizeof(int));
+        if (send_packet(fd, buf, 1 + 2 * sizeof(int)) == -1) goto abort;
+    } else if (*buf == CMD_READ) {
+        goto abort;
+    } else if (*buf == CMD_WRITE) {
+        goto abort;
     } else {
         goto abort;
     }

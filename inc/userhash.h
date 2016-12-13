@@ -39,6 +39,9 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid);
  * Errors include ENOMEM (in case memory allocation fails), or EDQUOT if the
  * note would exceed the entry's maximum note volume.  */
 int uhnode_addnote(struct uhnode *node, struct note *note);
+/* Count the notes present in the given node
+ * This function is infallible. */
+int uhnode_countnotes(const struct uhnode *node);
 /* Extract the notes from this node
  * Returns them as a NULL-teriminated pointer array.
  * This function is infallible. */
