@@ -16,7 +16,7 @@ int statusctl(struct status *st, int command) {
     } else if (command & STATUSCTL_ENABLE) {
         if (! (st->flags & STATUS_ENABLED)) {
             if (st->flags & STATUS_UNLOCKED || command & STATUSCTL_FORCE) {
-                st->flags |= STATUS_ENABLED;
+                st->flags |= STATUS_ENABLED | STATUS_UNLOCKED;
             } else {
                 return STATUSRES_AGAIN;
             }

@@ -42,20 +42,26 @@ int mkrand(void *buf, ssize_t len) {
     return rd;
 }
 
-int send_packet(int fd, char *buf, size_t buflen) {
-    struct message msg = { 0, buflen, buf, -1 };
+int send_packet(int fd, const char *buf, size_t buflen) {
+    struct message msg = { 0, buflen, (char *) buf, -1 };
     if (mkrand(&msg.key, sizeof(msg.key)) == -1)
         return -1;
     return send_message(fd, &msg, COMM_PEERAUTH);
 }
 int recv_packet(int fd, char **buf, size_t *buflen, uid_t *uid) {
     struct message msg = { 0, 0, NULL, -1 };
-    if (recv_message(fd, &msg, COMM_PEERAUTH) == -1)
-        return -1;
-    *buflen = msg.length;
-    *buf = msg.data;
-    if (uid != NULL) *uid = msg.sender;
-    return 0;
+    int rd = recv_message(fd, &msg, COMM_PEERAUTH);
+    if (rd == -1) return -1;
+    if (rd == 0) {
+        *buflen = 0;
+        *buf = NULL;
+        if (uid != NULL) *uid = -1;
+    } else {
+        *buflen = msg.length;
+        *buf = msg.data;
+        if (uid != NULL) *uid = msg.sender;
+    }
+    return rd;
 }
 
 void alarm_handler(int signo) {
@@ -73,6 +79,13 @@ int install_handler(int enable) {
     }
 }
 
+int do_request(int fd, const char *sbuf, size_t sbuflen,
+               char **rbuf, size_t *rbuflen) {
+    if (send_packet(fd, sbuf, sbuflen) == -1)
+        return -1;
+    return recv_packet(fd, rbuf, rbuflen, NULL);
+}
+
 int server_handler(int fd, void *data) {
     int ret = -1;
     char *buf = NULL;
@@ -82,7 +95,7 @@ int server_handler(int fd, void *data) {
     if (install_handler(1) == -1) goto abort;
     alarm(1);
     /* Actual handling */
-    if (recv_packet(fd, &buf, &buflen, &sender) == -1) goto abort;
+    if (recv_packet(fd, &buf, &buflen, &sender) <= 0) goto abort;
     if (buflen == 0) goto end;
     if (*buf == CMD_PING) {
         buf[0] = RSP_PING;
@@ -93,7 +106,7 @@ int server_handler(int fd, void *data) {
         if (buflen != 1 + sizeof(int)) goto abort;
         node = userhash_make(data, sender);
         if (node == NULL) goto abort;
-        memcpy(&cmd, data + 1, sizeof(int));
+        memcpy(&cmd, buf + 1, sizeof(int));
         count = uhnode_countnotes(node);
         res = statusctl(&node->status, cmd);
         buf = realloc(buf, 1 + 2 * sizeof(int));
@@ -167,6 +180,10 @@ int main(int argc, char *argv[]) {
         act = (argc == 2) ? PING : USAGE;
     } else if (strcmp(argv[1], PROGNAME) == 0) {
         act = (argc == 2) ? XYZZY : USAGE;
+    } else if (strcmp(argv[1], "-d") == 0) {
+        struct userhash uh;
+        userhash_init(&uh);
+        return (server_main(&server_handler, &uh, -1) == -1) ? 1 : 0;
     } else {
         xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
         return 1;
@@ -223,15 +240,41 @@ int main(int argc, char *argv[]) {
     if (act == PING) {
         char buf[1] = { CMD_PING }, *rbuf;
         size_t rbuflen;
-        if (send_packet(sockfd, buf, sizeof(buf)) == -1)
-            return EXIT_ERRNO;
-        if (recv_packet(sockfd, &rbuf, &rbuflen, NULL) == -1)
+        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
             return EXIT_ERRNO;
         if (rbuflen == 0 || *rbuf != RSP_PING) {
             xprintf(STDOUT_FILENO, msg_oops);
             return 2;
         } else {
             xprintf(STDOUT_FILENO, msg_pong);
+        }
+    } else if (act == STATUS) {
+        char buf[1 + sizeof(int)] = { CMD_STATUS }, *rbuf;
+        size_t rbuflen;
+        int rsp, count;
+        memcpy(buf + 1, &subact, sizeof(int));
+        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
+            return EXIT_ERRNO;
+        if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != RSP_STATUS) {
+            xprintf(STDOUT_FILENO, msg_oops);
+            return 2;
+        }
+        memcpy(&rsp, rbuf + 1, sizeof(int));
+        memcpy(&count, rbuf + 1 + sizeof(int), sizeof(int));
+        if (rsp < 0) {
+            if (rsp == STATUSRES_AGAIN) {
+                xprintf(STDERR_FILENO, msg_sure);
+                return 3;
+            } else {
+                xprintf(STDERR_FILENO, msg_oops);
+                return 2;
+            }
+        } else if (count) {
+            xprintf(STDOUT_FILENO, msg_status_cnt, (rsp & STATUS_ENABLED) ?
+                    cmd_on : cmd_off, count);
+        } else {
+            xprintf(STDOUT_FILENO, msg_status, (rsp & STATUS_ENABLED) ?
+                    cmd_on : cmd_off);
         }
     } else {
         xprintf(STDERR_FILENO, msg_nyi);

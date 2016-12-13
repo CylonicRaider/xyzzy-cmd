@@ -65,6 +65,7 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid) {
     ht->datacount++;
     node = calloc(1, sizeof(struct uhnode));
     if (node == NULL) return NULL;
+    node->uid = uid;
     if (status_init(&node->status)) {
         free(node);
         return NULL;
@@ -116,6 +117,7 @@ int uhnode_addnote(struct uhnode *node, struct note *note) {
 int uhnode_countnotes(const struct uhnode *node) {
     struct note **n;
     int ret = 0;
+    if (node->notes == NULL) return 0;
     for (n = node->notes; *n; n++) ret++;
     return ret;
 }
@@ -125,5 +127,6 @@ struct note **uhnode_popnotes(struct uhnode *node) {
     node->notecap = 0;
     node->notelen = 0;
     node->notesize = 0;
+    node->notes = NULL;
     return ret;
 }

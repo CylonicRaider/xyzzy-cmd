@@ -45,6 +45,10 @@ error_nouser = "No such user: %s\n";
 
 /* Miscellaneous messages */
 msg_pong = "pong\n";
+msg_status = "%s\n";
+msg_status_cnt = "%s (%d)\n";
+
+msg_sure = "sure?\n";
 msg_oops = "oops\n";
 msg_nyi = "NYI\n";
 

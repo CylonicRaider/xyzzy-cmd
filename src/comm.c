@@ -55,7 +55,9 @@ ssize_t recv_message(int fd, struct message *msg, int flags) {
     rd = read_exactly(fd, recvbuf + ret, sizeof(recvbuf) - ret);
     if (rd == -1) return -1;
     ret += rd;
-    if (ret < 8) {
+    if (ret == 0) {
+        return 0;
+    } else if (ret < 8) {
         errno = EBADMSG;
         return -1;
     }
