@@ -269,6 +269,8 @@ int main(int argc, char *argv[]) {
                 xprintf(STDERR_FILENO, msg_oops);
                 return 2;
             }
+        } else if (subact != 0) {
+            /* NOP */
         } else if (count) {
             xprintf(STDOUT_FILENO, msg_status_cnt, (rsp & STATUS_ENABLED) ?
                     cmd_on : cmd_off, count);
