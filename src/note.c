@@ -69,10 +69,10 @@ int note_print(int fd, const struct note *note) {
 }
 
 char *note_pack(char *buf, size_t *length, int header,
-                const struct note *notes[]) {
+                struct note *notes[]) {
     size_t len = header;
     char *res;
-    const struct note **p;
+    struct note **p;
     for (p = notes; *p; p++)
         len += NOTE_SIZE(*p);
     if (length != 0) *length = len;

@@ -35,7 +35,7 @@ int note_print(int fd, const struct note *note);
  * kept in the beginning of the buffer. The array of note pointers is
  * terminated by a NULL. */
 char *note_pack(char *buf, size_t *length, int header,
-                const struct note *notes[]);
+                struct note *notes[]);
 
 /* Unpack a list of notes into a dynamically allocated array of pointers
  * A header argument is not provided, the caller has to increment buf

@@ -116,7 +116,21 @@ int server_handler(int fd, void *data) {
         memcpy(buf + 1 + sizeof(int), &count, sizeof(int));
         if (send_packet(fd, buf, 1 + 2 * sizeof(int)) == -1) goto abort;
     } else if (*buf == CMD_READ) {
-        goto abort;
+        struct uhnode *node;
+        if (buflen != 1) goto abort;
+        node = userhash_get(data, sender);
+        if (node != NULL) {
+            struct note **notes = uhnode_popnotes(node);
+            if (notes != NULL) {
+                buf = note_pack(buf, &buflen, 1, notes);
+                struct note **p;
+                for (p = notes; *p; p++) free(*p);
+                free(notes);
+                if (buf == NULL) goto abort;
+            }
+        }
+        buf[0] = RSP_READ;
+        if (send_packet(fd, buf, buflen) == -1) goto abort;
     } else if (*buf == CMD_WRITE) {
         goto abort;
     } else {
