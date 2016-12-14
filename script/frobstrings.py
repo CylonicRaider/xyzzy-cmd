@@ -133,6 +133,14 @@ def encode_string(s):
                 can_hex = False
     ret.append('"')
     return ''.join(ret)
+def encode_bytes(s):
+    if not s:
+        return '{}'
+    elif isinstance(s[0], int):
+        ret = [i for i in s]
+    else:
+        ret = map(ord, s)
+    return '{ ' + ', '.join(map(str, ret)) + ' }'
 
 def write_pkt(f, k, s):
     f.write(struct.pack('!II', k, len(s)) + s)
@@ -282,9 +290,9 @@ def main():
                 if len(parts) != 2:
                     raise SystemExit('Bad defsize pragma')
                 if hdrstream:
-                    writehdr('#define %s(b) (sizeof(b) - 2)' % parts[1])
+                    writehdr('#define %s(b) (sizeof(b) - 1)' % parts[1])
                 else:
-                    writeout('#define %s(b) (sizeof(b) - 2)' % parts[1])
+                    writeout('#define %s(b) (sizeof(b) - 1)' % parts[1])
             else:
                 if hdrstream:
                     writehdr(token[1])
@@ -299,11 +307,11 @@ def main():
             if hdrstream:
                 if not listkeys or not listtype:
                     writehdr('%s %s_key;'  % (keytype, n))
-                writehdr('%s %s[%s];' % (chartype, n, len(s) + 1))
+                writehdr('%s %s[%s];' % (chartype, n, len(s)))
             if not listkeys or not listtype:
                 writeout('%s %s_key = 0x%x;' % (keytype, n, nk))
-            writeout('%s %s[%s] = %s;' % (chartype, n, len(s) + 1,
-                                            encode_string(ns)))
+            writeout('%s %s[%s] = %s;' % (chartype, n, len(s),
+                                          encode_bytes(ns)))
             if listtype is not None:
                 names.append((n, nk, len(s) - 1))
         else:
