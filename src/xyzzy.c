@@ -132,7 +132,17 @@ int server_handler(int fd, void *data) {
         buf[0] = RSP_READ;
         if (send_packet(fd, buf, buflen) == -1) goto abort;
     } else if (*buf == CMD_WRITE) {
-        goto abort;
+        struct uhnode *node;
+        struct note **notes, **p;
+        node = userhash_make(data, sender);
+        if (node == NULL) goto abort;
+        notes = note_unpack(buf + 1, buflen - 1, NULL);
+        if (notes == NULL) goto abort;
+        for (p = notes; *p; p++)
+            uhnode_addnote(node, *p);
+        free(notes);
+        buf[0] = RSP_WRITE;
+        if (send_packet(fd, buf, 1) == -1) goto abort;
     } else {
         goto abort;
     }
