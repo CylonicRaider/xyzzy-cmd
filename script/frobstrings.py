@@ -278,6 +278,13 @@ def main():
                 if len(parts) != 2:
                     raise SystemExit('Bad chartype pragma')
                 chartype = parts[1]
+            elif parts and parts[0] == '#defsize':
+                if len(parts) != 2:
+                    raise SystemExit('Bad defsize pragma')
+                if hdrstream:
+                    writehdr('#define %s(b) (sizeof(b) - 2)' % parts[1])
+                else:
+                    writeout('#define %s(b) (sizeof(b) - 2)' % parts[1])
             else:
                 if hdrstream:
                     writehdr(token[1])

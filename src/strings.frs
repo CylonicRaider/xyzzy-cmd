@@ -12,6 +12,7 @@
 
 #listkeys
 #listdecl frobstring
+#defsize FROB_SIZE
 
 PROGNAME = "xyzzy";
 
