@@ -179,6 +179,8 @@ int main(int argc, char *argv[]) {
             xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
             return 0;
         }
+    } else if (argc >= 3 && strcmp(argv[2], cmd_help) == 0) {
+        act = USAGE_OK;
     } else if (strcmp(argv[1], cmd_on) == 0) {
         act = STATUS;
         subact = STATUSCTL_ENABLE;
