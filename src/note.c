@@ -59,7 +59,7 @@ int note_print(int fd, const struct note *note) {
     if (xprintf(fd, notes_format, pwd.name, (int) note->sender,
                 (int) tm.year, (int) tm.month, (int) tm.day,
                 (int) tm.hour, (int) tm.minute, (int) tm.second,
-                (int) (note->time.tv_usec / 1000)) < 0)
+                (int) (note->time.tv_usec / 1000), (int) note->length) < 0)
         return -1;
     if (write_exactly(fd, note->content, note->length) != note->length)
         return -1;
