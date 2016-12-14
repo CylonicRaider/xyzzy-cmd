@@ -266,12 +266,8 @@ int main(int argc, char *argv[]) {
         size_t rbuflen;
         if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
             return EXIT_ERRNO;
-        if (rbuflen == 0 || *rbuf != RSP_PING) {
-            xprintf(STDOUT_FILENO, msg_oops);
-            return 2;
-        } else {
-            xprintf(STDOUT_FILENO, msg_pong);
-        }
+        if (rbuflen == 0 || *rbuf != RSP_PING) goto oops;
+        xprintf(STDOUT_FILENO, msg_pong);
     } else if (act == STATUS) {
         char buf[1 + sizeof(int)] = { CMD_STATUS }, *rbuf;
         size_t rbuflen;
@@ -279,20 +275,13 @@ int main(int argc, char *argv[]) {
         memcpy(buf + 1, &subact, sizeof(int));
         if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
             return EXIT_ERRNO;
-        if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != RSP_STATUS) {
-            xprintf(STDOUT_FILENO, msg_oops);
-            return 2;
-        }
+        if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != RSP_STATUS) goto oops;
         memcpy(&rsp, rbuf + 1, sizeof(int));
         memcpy(&count, rbuf + 1 + sizeof(int), sizeof(int));
         if (rsp < 0) {
-            if (rsp == STATUSRES_AGAIN) {
-                xprintf(STDERR_FILENO, msg_sure);
-                return 3;
-            } else {
-                xprintf(STDERR_FILENO, msg_oops);
-                return 2;
-            }
+            if (rsp != STATUSRES_AGAIN) goto oops;
+            xprintf(STDERR_FILENO, msg_sure);
+            return 2;
         } else if (subact != 0) {
             /* NOP */
         } else if (count) {
@@ -308,16 +297,10 @@ int main(int argc, char *argv[]) {
         struct note **notes, **p;
         if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
             return EXIT_ERRNO;
-        if (rbuflen == 0 || *rbuf != RSP_READ) {
-            xprintf(STDOUT_FILENO, msg_oops);
-            return 2;
-        }
+        if (rbuflen == 0 || *rbuf != RSP_READ) goto oops;
         notes = note_unpack(rbuf + 1, rbuflen - 1, NULL);
         if (notes == NULL) {
-            if (errno == EBADMSG) {
-                xprintf(STDOUT_FILENO, msg_oops);
-                return 2;
-            }
+            if (errno == EBADMSG) goto oops;
             return EXIT_ERRNO;
         }
         for (p = notes; *p; p++)
@@ -327,4 +310,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     return 0;
+    oops:
+        xprintf(STDERR_FILENO, msg_oops);
+        return 63;
 }
