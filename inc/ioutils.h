@@ -22,6 +22,14 @@ struct xpwd {
     char name[NAME_SIZE];
 };
 
+/* Convert the given string to an integer
+ * On success, returns zero; on error, returns -1, setting errno:
+ * ERANGE when s is definitely too large;
+ * EINVAL when s contains invalid characters (where +, -, the digits, and
+ *        whitespace are valid).
+ * i is only written to on success. */
+int xatoi(const char *s, int *i);
+
 /* Convert the given integer to a string in the caller-passed buffer
  * The buffer must be at least INT_SPACE bytes large.
  * This function is infallible. */

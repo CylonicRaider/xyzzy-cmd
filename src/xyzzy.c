@@ -1,8 +1,10 @@
 
 /* The purpose of this is enigmatic. */
 
+#define _POSIX_SOURCE
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -240,10 +242,7 @@ int main(int argc, char *argv[]) {
     } else if (act == WRITE) {
         struct xpwd pw;
         int uid, pwres;
-        char *end;
-        errno = 0;
-        uid = strtol(user, &end, 10);
-        if (errno != 0 || (*end && *end != ' ' && *end != '\t')) {
+        if (xatoi(user, &uid) == -1) {
             pwres = xgetpwent(&pw, -1, user);
         } else {
             pwres = xgetpwent(&pw, uid, NULL);

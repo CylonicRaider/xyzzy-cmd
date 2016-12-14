@@ -14,6 +14,43 @@
 #define _XPRINTF_ZPAD 1
 #define _XPRINTF_LEFT 2
 
+int xatoi(const char *buf, int *i) {
+    unsigned int ui = 0;
+    int neg = 0, l = 0, end = 0;
+    while (*buf) {
+        char ch = *buf++;
+        if (ch == ' ' || ch == '\t') {
+            if (l) end = 1;
+        } else if (ch == '-') {
+            if (neg || l) goto invalid;
+            neg = -1;
+        } else if (ch == '+') {
+            if (neg || l) goto invalid;
+            neg = 1;
+        } else if ('0' <= ch && ch <= '9') {
+            unsigned int nui;
+            if (end) goto invalid;
+            nui = ui * 10 + (ch - '0');
+            // Wrapping! Wheee!
+            if (nui / 10 != ui) goto overflow;
+            ui = nui;
+            l = 1;
+        } else {
+            goto invalid;
+        }
+    }
+    if (! l) goto invalid;
+    if (! neg) neg = 1;
+    *i = ui * neg;
+    return 0;
+    invalid:
+        errno = EINVAL;
+        return -1;
+    overflow:
+        errno = ERANGE;
+        return -1;
+}
+
 void xitoa(char *buf, int i) {
     unsigned int ui;
     char *dp = buf, *ddp, *rdp;
@@ -230,9 +267,7 @@ int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
         /* Compare names */
         if (name != NULL && strcmp(namestr, name) != 0) continue;
         /* Decode UID */
-        errno = 0;
-        fuid = strtol(uidstr, &end, 10);
-        if (*end || errno) return -1;
+        if (xatoi(uidstr, &fuid) == -1) goto end;
         /* Copy name into buffer */
         strncpy(pwd->name, namestr, sizeof(pwd->name) - 1);
         pwd->name[sizeof(pwd->name) - 1] = 0;
