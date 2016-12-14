@@ -292,6 +292,26 @@ int main(int argc, char *argv[]) {
             xprintf(STDOUT_FILENO, msg_status, (rsp & STATUS_ENABLED) ?
                     cmd_on : cmd_off);
         }
+    } else if (act == READ) {
+        char buf[1] = { CMD_READ }, *rbuf;
+        size_t rbuflen;
+        struct note **notes, **p;
+        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
+            return EXIT_ERRNO;
+        if (rbuflen == 0 || *rbuf != RSP_READ) {
+            xprintf(STDOUT_FILENO, msg_oops);
+            return 2;
+        }
+        notes = note_unpack(rbuf + 1, rbuflen - 1, NULL);
+        if (notes == NULL) {
+            if (errno == EBADMSG) {
+                xprintf(STDOUT_FILENO, msg_oops);
+                return 2;
+            }
+            return EXIT_ERRNO;
+        }
+        for (p = notes; *p; p++)
+            note_print(STDOUT_FILENO, *p);
     } else {
         xprintf(STDERR_FILENO, msg_nyi);
         return 1;
