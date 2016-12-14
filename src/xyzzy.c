@@ -148,7 +148,6 @@ int server_handler(int fd, void *data) {
         free(notes);
         buf[0] = RSP_WRITE;
         if (send_packet(fd, buf, 1) == -1) goto abort;
-        goto end;
     } else {
         goto abort;
     }

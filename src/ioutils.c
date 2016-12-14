@@ -83,7 +83,7 @@ ssize_t xputs(int fd, const char *string) {
 
 ssize_t xprintf(int fd, const char *fmt, ...) {
     size_t written = 0;
-    char numbuf[INT_SPACE], hexbuf[sizeof(uintptr_t) * CHAR_BIT / 4 + 3];
+    char numbuf[INT_SPACE];
     va_list ap;
     va_start(ap, fmt);
     while (*fmt) {
@@ -107,8 +107,7 @@ ssize_t xprintf(int fd, const char *fmt, ...) {
                 flags |= _XPRINTF_ZPAD;
             } else if (*fmt == '-' && ! length) {
                 flags |= _XPRINTF_LEFT;
-            } else if (*fmt == 's' || *fmt == 'd' || *fmt == 'p' ||
-                       *fmt == '%') {
+            } else if (*fmt == 's' || *fmt == 'd' || *fmt == '%') {
                 conv = *fmt++;
                 break;
             } else {
@@ -126,22 +125,6 @@ ssize_t xprintf(int fd, const char *fmt, ...) {
             int val = va_arg(ap, int);
             xitoa(numbuf, val);
             output = numbuf;
-        } else if (conv == 'p') {
-            void *val = va_arg(ap, void *);
-            uintptr_t ival = (uintptr_t) val;
-            if (val == NULL) {
-                strcpy(hexbuf, nullptr);
-            } else {
-                int i;
-                hexbuf[0] = '0';
-                hexbuf[1] = 'x';
-                for (i = 0; i < sizeof(ival) * CHAR_BIT / 4; i++) {
-                    hexbuf[2 + i] = hexdigits[ival >>
-                        (sizeof(ival) * CHAR_BIT - (i * 4) - 4) & 15];
-                }
-                hexbuf[2 + i] = 0;
-            }
-            output = hexbuf;
         } else {
             output = "%";
         }

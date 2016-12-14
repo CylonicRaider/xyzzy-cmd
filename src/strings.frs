@@ -20,10 +20,6 @@ dev_null = "/dev/null";
 dev_urandom = "/dev/urandom";
 etc_passwd = "/etc/passwd";
 
-/* Conversion helpers */
-nullptr = "(null)";
-hexdigits = "0123456789abcdef";
-
 /* Note format string */
 notes_format = "From: %s (%d)\n"
     "Date: %d-%02d-%02d %02d:%02d:%02d.%02d Z\n";
