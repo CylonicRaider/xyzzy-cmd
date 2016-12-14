@@ -150,8 +150,8 @@ int server_handler(int fd, void *data) {
     end:
         ret = 0;
     abort:
-        if (install_handler(0) == -1) goto abort;
-        if (buf != NULL) free(buf);
+        install_handler(0);
+        free(buf);
         close(fd);
         return ret;
 }
