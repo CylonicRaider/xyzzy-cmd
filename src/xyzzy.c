@@ -138,11 +138,17 @@ int server_handler(int fd, void *data) {
         if (node == NULL) goto abort;
         notes = note_unpack(buf + 1, buflen - 1, NULL);
         if (notes == NULL) goto abort;
-        for (p = notes; *p; p++)
-            uhnode_addnote(node, *p);
+        for (p = notes; *p; p++) {
+            if (uhnode_addnote(node, *p) == -1) {
+                for (; *p; p++) free(*p);
+                free(notes);
+                goto abort;
+            }
+        }
         free(notes);
         buf[0] = RSP_WRITE;
         if (send_packet(fd, buf, 1) == -1) goto abort;
+        goto end;
     } else {
         goto abort;
     }
@@ -305,9 +311,16 @@ int main(int argc, char *argv[]) {
         }
         for (p = notes; *p; p++)
             note_print(STDOUT_FILENO, *p);
+    } else if (act == WRITE) {
+        size_t buflen = 1 + NOTE_SIZE(tosend);
+        char *buf = malloc(buflen);
+        if (buf == NULL) return EXIT_ERRNO;
+        if (do_request(sockfd, buf, buflen, &buf, &buflen) == -1)
+            return EXIT_ERRNO;
+        if (buflen != 1 || *buf != RSP_WRITE) goto oops;
+        /* NOP */
     } else {
-        xprintf(STDERR_FILENO, msg_nyi);
-        return 1;
+        goto oops;
     }
     return 0;
     oops:

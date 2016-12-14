@@ -53,6 +53,8 @@ ssize_t xputs(int fd, const char *string);
  * Supported format specifiers:
  * %d -- int
  * %s -- char *
+ * %p -- void *
+ * %% -- Percent sign
  * The space and minus flags and a field width are supported.
  * Who needs more? */
 ssize_t xprintf(int fd, const char *fmt, ...);
