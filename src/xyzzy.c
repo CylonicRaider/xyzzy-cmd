@@ -213,10 +213,6 @@ int main(int argc, char *argv[]) {
         act = (argc == 2) ? PING : USAGE;
     } else if (strcmp(argv[1], PROGNAME) == 0) {
         act = (argc == 2) ? XYZZY : USAGE;
-    } else if (strcmp(argv[1], "-d") == 0) {
-        struct userhash uh;
-        userhash_init(&uh);
-        return (server_main(&server_handler, &uh, -1) == -1) ? 1 : 0;
     } else {
         xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
         return 1;
