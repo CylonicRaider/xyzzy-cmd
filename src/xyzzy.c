@@ -315,6 +315,8 @@ int main(int argc, char *argv[]) {
         size_t buflen = 1 + NOTE_SIZE(tosend);
         char *buf = malloc(buflen);
         if (buf == NULL) return EXIT_ERRNO;
+        buf[0] = CMD_WRITE;
+        memcpy(buf + 1, tosend, NOTE_SIZE(tosend));
         if (do_request(sockfd, buf, buflen, &buf, &buflen) == -1)
             return EXIT_ERRNO;
         if (buflen != 1 || *buf != RSP_WRITE) goto oops;
