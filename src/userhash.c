@@ -101,7 +101,7 @@ int uhnode_addnote(struct uhnode *node, struct note *note) {
     }
     if (node->notelen + 2 > node->notecap) {
         size_t newcap = (node->notecap == 0) ? 2 : node->notecap * 2;
-        struct note **newnotes = malloc(newcap);
+        struct note **newnotes = malloc(newcap * sizeof(struct note *));
         if (newnotes == NULL) return -1;
         memcpy(newnotes, node->notes, node->notelen * sizeof(struct note *));
         free(node->notes);

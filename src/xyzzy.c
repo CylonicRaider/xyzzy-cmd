@@ -165,8 +165,9 @@ int server_handler(int fd, void *data) {
 
 int main(int argc, char *argv[]) {
     enum main_action act = NONE;
-    int subact = 0, sockfd;
-    char *user = NULL;
+    int subact = 0, sockfd, ret = 63;
+    char *user = NULL, *sbuf = NULL, *rbuf = NULL;
+    size_t sbuflen, rbuflen;
     struct note *tosend = NULL;
     init_strings();
     if (argc <= 1) {
@@ -245,45 +246,50 @@ int main(int argc, char *argv[]) {
         }
         if (pwres == -1) {
             if (errno == 0) xprintf(STDOUT_FILENO, error_nouser, user);
-            return EXIT_ERRNO;
+            goto exit_errno;
         }
         tosend = note_read(STDIN_FILENO, NULL);
-        if (tosend == NULL) return EXIT_ERRNO;
+        if (tosend == NULL) goto exit_errno;
         tosend->sender = pw.uid;
     }
     sockfd = client_connect();
     if (sockfd == -1) {
         struct userhash uh;
         if (errno != ECONNREFUSED)
-            return EXIT_ERRNO;
+            goto exit_errno;
         userhash_init(&uh);
         if (server_spawn(argc, argv, &server_handler, &uh) == -1)
-            return EXIT_ERRNO;
+            goto exit_errno;
         sockfd = client_connect();
         if (sockfd == -1)
-            return EXIT_ERRNO;
+            goto exit_errno;
     }
     if (act == PING) {
-        char buf[1] = { CMD_PING }, *rbuf;
-        size_t rbuflen;
-        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
-            return EXIT_ERRNO;
+        sbuf = malloc(1);
+        if (sbuf == NULL)
+            goto exit_errno;
+        sbuf[0] = CMD_PING;
+        if (do_request(sockfd, sbuf, 1, &rbuf, &rbuflen) == -1)
+            goto exit_errno;
         if (rbuflen == 0 || *rbuf != RSP_PING) goto oops;
         xprintf(STDOUT_FILENO, msg_pong);
     } else if (act == STATUS) {
-        char buf[1 + sizeof(int)] = { CMD_STATUS }, *rbuf;
-        size_t rbuflen;
         int rsp, count;
-        memcpy(buf + 1, &subact, sizeof(int));
-        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
-            return EXIT_ERRNO;
+        sbuf = malloc(1 + sizeof(int));
+        if (sbuf == NULL)
+            goto exit_errno;
+        sbuf[0] = CMD_STATUS;
+        memcpy(sbuf + 1, &subact, sizeof(int));
+        if (do_request(sockfd, sbuf, 1 + sizeof(int), &rbuf, &rbuflen) == -1)
+            goto exit_errno;
         if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != RSP_STATUS) goto oops;
         memcpy(&rsp, rbuf + 1, sizeof(int));
         memcpy(&count, rbuf + 1 + sizeof(int), sizeof(int));
         if (rsp < 0) {
             if (rsp != STATUSRES_AGAIN) goto oops;
             xprintf(STDERR_FILENO, msg_sure);
-            return 2;
+            ret = 2;
+            goto end;
         } else if (subact != 0) {
             /* NOP */
         } else if (count) {
@@ -294,34 +300,47 @@ int main(int argc, char *argv[]) {
                     cmd_on : cmd_off);
         }
     } else if (act == READ) {
-        char buf[1] = { CMD_READ }, *rbuf;
-        size_t rbuflen;
         struct note **notes, **p;
-        if (do_request(sockfd, buf, sizeof(buf), &rbuf, &rbuflen) == -1)
-            return EXIT_ERRNO;
+        sbuf = malloc(1);
+        if (sbuf == NULL) goto exit_errno;
+        sbuf[0] = CMD_READ;
+        if (do_request(sockfd, sbuf, 1, &rbuf, &rbuflen) == -1)
+            goto exit_errno;
         if (rbuflen == 0 || *rbuf != RSP_READ) goto oops;
         notes = note_unpack(rbuf + 1, rbuflen - 1, NULL);
         if (notes == NULL) {
             if (errno == EBADMSG) goto oops;
-            return EXIT_ERRNO;
+            goto exit_errno;
         }
-        for (p = notes; *p; p++)
+        for (p = notes; *p; p++) {
             note_print(STDOUT_FILENO, *p);
+            free(*p);
+        }
+        free(notes);
     } else if (act == WRITE) {
-        size_t buflen = 1 + NOTE_SIZE(tosend);
-        char *buf = malloc(buflen);
-        if (buf == NULL) return EXIT_ERRNO;
-        buf[0] = CMD_WRITE;
-        memcpy(buf + 1, tosend, NOTE_SIZE(tosend));
-        if (do_request(sockfd, buf, buflen, &buf, &buflen) == -1)
-            return EXIT_ERRNO;
-        if (buflen != 1 || *buf != RSP_WRITE) goto oops;
+        sbuflen = 1 + NOTE_SIZE(tosend);
+        sbuf = malloc(sbuflen);
+        if (sbuf == NULL) goto exit_errno;
+        sbuf[0] = CMD_WRITE;
+        memcpy(sbuf + 1, tosend, NOTE_SIZE(tosend));
+        if (do_request(sockfd, sbuf, sbuflen, &rbuf, &rbuflen) == -1)
+            goto exit_errno;
+        if (rbuflen != 1 || *rbuf != RSP_WRITE) goto oops;
         /* NOP */
     } else {
         goto oops;
     }
-    return 0;
+    ret = 0;
+    goto end;
     oops:
         xprintf(STDERR_FILENO, msg_oops);
-        return 63;
+        ret = 62;
+        goto end;
+    exit_errno:
+        ret = EXIT_ERRNO;
+    end:
+        free(sbuf);
+        free(rbuf);
+        free(tosend);
+        return ret;
 }

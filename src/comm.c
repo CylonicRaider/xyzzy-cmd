@@ -106,6 +106,7 @@ ssize_t send_message(int fd, const struct message *msg, int flags) {
         struct ucred creds = { getpid(), getuid(), getgid() };
         struct cmsghdr *cm;
         hdr.msg_controllen = CMSG_SPACE(sizeof(struct ucred));
+        memset(ancbuf, 0, hdr.msg_controllen);
         cm = CMSG_FIRSTHDR(&hdr);
         cm->cmsg_len = CMSG_LEN(sizeof(struct ucred));
         cm->cmsg_level = SOL_SOCKET;
