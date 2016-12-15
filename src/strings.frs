@@ -22,9 +22,11 @@ dev_urandom = "/dev/urandom";
 etc_passwd = "/etc/passwd";
 
 /* Note format string */
-notes_format = "From: %s (%d)\n"
+note_header = "From: %s (%d)\n"
     "Date: %d-%02d-%02d %02d:%02d:%02d.%03d Z\n"
-    "Size: %d\n";
+    "Size: %d\n"
+    "--------------------\n";
+note_footer = "\n--------------------\n";
 
 /* Command-line arguments */
 cmd_help = "--help";

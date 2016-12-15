@@ -313,10 +313,19 @@ int main(int argc, char *argv[]) {
             goto exit_errno;
         }
         for (p = notes; *p; p++) {
-            note_print(STDOUT_FILENO, *p);
+            if (p != notes && xputc(STDOUT_FILENO, '\n') == -1)
+                goto notes_abort;
+            if (note_print(STDOUT_FILENO, *p) == -1)
+                goto notes_abort;
             free(*p);
         }
         free(notes);
+        ret = 0;
+        goto end;
+        notes_abort:
+            while (*p) free(*p++);
+            free(notes);
+            goto exit_errno;
     } else if (act == WRITE) {
         sbuflen = 1 + NOTE_SIZE(tosend);
         sbuf = malloc(sbuflen);

@@ -51,19 +51,22 @@ struct note *note_read(int fd, struct note *note) {
 int note_print(int fd, const struct note *note) {
     struct xtime tm;
     struct xpwd pwd;
+    size_t len;
     if (xgetpwent(&pwd, note->sender, NULL) == -1) {
         if (errno != 0) return -1;
         strcpy(pwd.name, "???");
     }
     xgmtime(&tm, note->time.tv_sec);
-    if (xprintf(fd, notes_format, pwd.name, (int) note->sender,
+    if (xprintf(fd, note_header, pwd.name, (int) note->sender,
                 (int) tm.year, (int) tm.month, (int) tm.day,
                 (int) tm.hour, (int) tm.minute, (int) tm.second,
-                (int) (note->time.tv_usec / 1000), (int) note->length) < 0)
+                (int) (note->time.tv_usec / 1000), (int) note->length) == -1)
         return -1;
-    if (write_exactly(fd, note->content, note->length) != note->length)
+    len = note->length;
+    if (len && note->content[len - 1] == '\n') len--;
+    if (write_exactly(fd, note->content, len) != len)
         return -1;
-    if (xputc(fd, '\n') == -1)
+    if (xputs(fd, note_footer) == -1)
         return -1;
     return 0;
 }
