@@ -165,7 +165,7 @@ int server_handler(int fd, void *data) {
 
 int main(int argc, char *argv[]) {
     enum main_action act = NONE;
-    int subact = 0, sockfd, ret = 63;
+    int subact = 0, sockfd = -1, ret = 63;
     char *user = NULL, *sbuf = NULL, *rbuf = NULL;
     size_t sbuflen, rbuflen;
     struct note *tosend = NULL;
@@ -351,5 +351,7 @@ int main(int argc, char *argv[]) {
         free(sbuf);
         free(rbuf);
         free(tosend);
+        if (urandom_fd != -1) close(urandom_fd);
+        if (sockfd != -1) close(sockfd);
         return ret;
 }
