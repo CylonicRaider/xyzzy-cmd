@@ -14,6 +14,8 @@
 #listdecl frobstring
 #defsize FROB_SIZE
 
+#makekey
+
 PROGNAME = "xyzzy";
 
 /* System files */

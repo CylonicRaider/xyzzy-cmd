@@ -5,6 +5,10 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#define FROBKEYLEN 8
+
+extern char _frobkey[FROBKEYLEN];
+
 /* Scramble the given string */
 void frob(uint32_t key, const char *src, char *dest);
 

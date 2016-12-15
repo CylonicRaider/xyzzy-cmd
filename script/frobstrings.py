@@ -168,13 +168,13 @@ def main():
         outstream.write(line + '\n')
         el['out'] = False
     # Parse arguments
-    infile, hdrfile, outfile = None, None, None
+    infile, hdrfile, outfile, keylen = None, None, None, 8
     try:
         it = iter(sys.argv[1:])
         for arg in it:
             if arg == '--help':
                 sys.stderr.write('USAGE: %s [--help] [-o outfile] '
-                                 '[-h hdrfile] [infile]\n' %
+                                 '[-h hdrfile] [-l keylen] [infile]\n' %
                                  sys.argv[0])
                 sys.stderr.write('If outfile or infile are "-" or missing, '
                                  'standard streams are used. If hdrfile '
@@ -187,6 +187,8 @@ def main():
                 outfile = next(it)
             elif arg == '-h':
                 hdrfile = next(it)
+            elif arg == '-l':
+                keylen = int(next(it))
             elif arg.startswith('-'):
                 raise SystemExit('Bad option %s!' % arg)
             elif infile is not None:
@@ -195,6 +197,8 @@ def main():
                 infile = arg
     except StopIteration:
         raise SystemExit('Missing required argument for option %s!' % arg)
+    except ValueError:
+        raise SystemExit('Bad argument for option %s!' % arg)
     instream = open_file(infile, 'r', sys.stdin)
     outstream = open_file(outfile, 'w', sys.stdout)
     if hdrfile is None:
@@ -202,7 +206,7 @@ def main():
     else:
         hdrstream = open_file(hdrfile, 'w', sys.stdout)
     # State
-    listtype, names = None, []
+    listtype, names, mkey, mkey_sent = None, [], None, False
     keytype, lentype, chartype = 'int', 'int', 'char'
     listkeys = False
     el = {'out': False, 'hdr': False}
@@ -293,6 +297,13 @@ def main():
                     writehdr('#define %s(b) (sizeof(b) - 1)' % parts[1])
                 else:
                     writeout('#define %s(b) (sizeof(b) - 1)' % parts[1])
+            elif parts and parts[0] == '#makekey':
+                if len(parts) != 1:
+                    raise SystemExit('Bad makekey pragma')
+                mkey = os.urandom(keylen)
+                writehdr('extern %s _frobkey[%s];' % (chartype, keylen))
+                writeout('%s _frobkey[%s] = %s;' % (chartype, keylen,
+                    encode_bytes(mkey)))
             else:
                 if hdrstream:
                     writehdr(token[1])
@@ -302,6 +313,11 @@ def main():
             n, s = token[1], token[2]
             k = struct.unpack('!I', os.urandom(4))[0]
             s += b'\0'
+            if not mkey_sent:
+                if mkey is None:
+                    raise SystemExit('Declaring strings without a key!')
+                proc.stdin.write(mkey)
+                mkey_sent = True
             write_pkt(proc.stdin, k, s)
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:

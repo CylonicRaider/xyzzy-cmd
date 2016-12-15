@@ -14,15 +14,21 @@ union numbuf {
     char str[4];
 };
 
+char _frobkey[FROBKEYLEN];
+
 /* Frobnicate uint32_t-key-uint32_t-length-and-prefixed strings from stdin to
  * stdout */
 int main(int argc, char *argv[]) {
     char *buf = NULL;
+    int rd = read(STDIN_FILENO, _frobkey, FROBKEYLEN);
+    if (rd < 0) die_err("read");
+    if (rd != FROBKEYLEN) die("Short read");
     for (;;) {
         /* Read key and length */
         union numbuf rdbuf[2];
         int32_t l, key;
-        int rd = read(STDIN_FILENO, rdbuf, 8), wr;
+        int wr;
+        rd = read(STDIN_FILENO, rdbuf, 8);
         if (rd < 0) die_err("read");
         if (rd == 0) break;
         if (rd != 8) die("Short read");
