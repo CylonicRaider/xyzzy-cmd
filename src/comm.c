@@ -16,8 +16,9 @@
 void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen) {
     addr->sun_family = AF_UNIX;
     addr->sun_path[0] = 0;
-    memcpy(addr->sun_path + 1, socket_addr, FROB_SIZE(sizeof(socket_addr)));
-    *addrlen = sizeof(sa_family_t) + FROB_SIZE(sizeof(socket_addr)) + 1;
+    addr->sun_path[1] = 0;
+    memcpy(addr->sun_path + 2, socket_addr, FROB_SIZE(sizeof(socket_addr)));
+    *addrlen = sizeof(sa_family_t) + FROB_SIZE(sizeof(socket_addr)) + 2;
 }
 
 ssize_t recv_message(int fd, struct message *msg, int flags) {
