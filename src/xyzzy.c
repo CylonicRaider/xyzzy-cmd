@@ -124,8 +124,8 @@ int server_handler(int fd, void *data) {
         if (node != NULL) {
             struct note **notes = uhnode_popnotes(node);
             if (notes != NULL) {
-                buf = note_pack(buf, &buflen, 1, notes);
                 struct note **p;
+                buf = note_pack(buf, &buflen, 1, notes);
                 for (p = notes; *p; p++) free(*p);
                 free(notes);
                 if (buf == NULL) goto abort;
@@ -134,22 +134,23 @@ int server_handler(int fd, void *data) {
         buf[0] = RSP_READ;
         if (send_packet(fd, buf, buflen) == -1) goto abort;
     } else if (*buf == CMD_WRITE) {
-        struct uhnode *node;
         struct note **notes, **p;
-        node = userhash_make(data, sender);
-        if (node == NULL) goto abort;
         notes = note_unpack(buf + 1, buflen - 1, NULL);
         if (notes == NULL) goto abort;
         for (p = notes; *p; p++) {
-            if (uhnode_addnote(node, *p) == -1) {
-                for (; *p; p++) free(*p);
-                free(notes);
-                goto abort;
-            }
+            struct uhnode *node = userhash_make(data, (*p)->sender);
+            if (node == NULL) goto cancel;
+            (*p)->sender = sender;
+            if (uhnode_addnote(node, *p) == -1) goto cancel;
         }
         free(notes);
         buf[0] = RSP_WRITE;
         if (send_packet(fd, buf, 1) == -1) goto abort;
+        goto end;
+        cancel:
+            for (; *p; p++) free(*p);
+            free(notes);
+            goto abort;
     } else {
         goto abort;
     }

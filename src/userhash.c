@@ -70,7 +70,8 @@ struct uhnode *userhash_make(struct userhash *ht, uid_t uid) {
         free(node);
         return NULL;
     }
-    if ((ht->datacap - ht->datacount) * LOAD_THRESHOLD > ht->datacap) {
+    if (ht->datacount * LOAD_THRESHOLD >
+            ht->datacap * (LOAD_THRESHOLD - 1)) {
         size_t newcap = ht->datacap * CAPACITY_INCR, i;
         struct uhnode **newdata = calloc(newcap, sizeof(struct uhnode *));
         if (newdata == NULL) {
