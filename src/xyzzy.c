@@ -66,6 +66,13 @@ int recv_packet(int fd, char **buf, size_t *buflen, uid_t *uid) {
     return rd;
 }
 
+int do_request(int fd, const char *sbuf, size_t sbuflen,
+               char **rbuf, size_t *rbuflen) {
+    if (send_packet(fd, sbuf, sbuflen) == -1)
+        return -1;
+    return recv_packet(fd, rbuf, rbuflen, NULL);
+}
+
 void alarm_handler(int signo) {
     alarmed = 1;
 }
@@ -79,13 +86,6 @@ int install_handler(int enable) {
     } else {
         return sigaction(SIGALRM, NULL, NULL);
     }
-}
-
-int do_request(int fd, const char *sbuf, size_t sbuflen,
-               char **rbuf, size_t *rbuflen) {
-    if (send_packet(fd, sbuf, sbuflen) == -1)
-        return -1;
-    return recv_packet(fd, rbuf, rbuflen, NULL);
 }
 
 int server_handler(int fd, void *data) {
