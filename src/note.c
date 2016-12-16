@@ -60,7 +60,7 @@ int note_print(int fd, const struct note *note) {
     if (xprintf(fd, note_header, pwd.name, (int) note->sender,
                 (int) tm.year, (int) tm.month, (int) tm.day,
                 (int) tm.hour, (int) tm.minute, (int) tm.second,
-                (int) (note->time.tv_usec / 1000), (int) note->length) == -1)
+                (int) note->time.tv_usec, (int) note->length) == -1)
         return -1;
     len = note->length;
     if (len && note->content[len - 1] == '\n') len--;
