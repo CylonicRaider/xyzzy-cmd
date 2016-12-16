@@ -212,6 +212,8 @@ int main(int argc, char *argv[]) {
         }
     } else if (strcmp(argv[1], cmd_ping) == 0) {
         act = (argc == 2) ? PING : USAGE;
+    } else if (strcmp(argv[1], cmd_pong) == 0) {
+        act = (argc == 2) ? PONG : USAGE;
     } else if (strcmp(argv[1], PROGNAME) == 0) {
         act = (argc == 2) ? XYZZY : USAGE;
     } else {
@@ -222,6 +224,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[1], cmd_status) == 0 ||
                 strcmp(argv[1], cmd_read) == 0 ||
                 strcmp(argv[1], cmd_ping) == 0 ||
+                strcmp(argv[1], cmd_pong) == 0 ||
                 strcmp(argv[1], PROGNAME) == 0) {
             xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, argv[1]);
         } else if (strcmp(argv[1], cmd_on) == 0 ||
@@ -264,7 +267,7 @@ int main(int argc, char *argv[]) {
         if (sockfd == -1)
             goto exit_errno;
     }
-    if (act == PING) {
+    if (act == PING || act == PONG) {
         sbuf = malloc(1);
         if (sbuf == NULL)
             goto exit_errno;
@@ -272,7 +275,11 @@ int main(int argc, char *argv[]) {
         if (do_request(sockfd, sbuf, 1, &rbuf, &rbuflen) == -1)
             goto exit_errno;
         if (rbuflen == 0 || *rbuf != RSP_PING) goto oops;
-        xprintf(STDOUT_FILENO, msg_pong);
+        if (act == PING) {
+            xprintf(STDOUT_FILENO, msg_pingpong, cmd_pong);
+        } else {
+            xprintf(STDOUT_FILENO, msg_pingpong, cmd_ping);
+        }
     } else if (act == STATUS) {
         int rsp, count;
         sbuf = malloc(1 + sizeof(int));

@@ -19,6 +19,7 @@
 #define RSP_READ     -3
 #define RSP_WRITE    -4
 
-enum main_action { NONE, PING, STATUS, READ, WRITE, XYZZY, USAGE, USAGE_OK };
+enum main_action { NONE, PING, PONG, STATUS, READ, WRITE,
+                   XYZZY, USAGE, USAGE_OK };
 
 #endif

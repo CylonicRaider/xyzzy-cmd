@@ -38,11 +38,12 @@ cmd_status = "status";
 cmd_read = "read";
 cmd_write = "write";
 cmd_ping = "ping";
+cmd_pong = "pong";
 cmd_force = "-f";
 
 /* Usage messages */
 usage_tmpl = "USAGE: %s %s\n";
-usage_list = "[help|on|off|status|read|write|ping]";
+usage_list = "[help|on|off|status|read|write|ping|pong]";
 usage_onoff = "USAGE: %s %s [-f]\n";
 usage_write = "write <user>";
 
@@ -50,7 +51,7 @@ usage_write = "write <user>";
 error_nouser = "No such user: %s\n";
 
 /* Miscellaneous messages */
-msg_pong = "pong\n";
+msg_pingpong = "%s\n";
 msg_status = "%s\n";
 msg_status_cnt = "%s (%d)\n";
 
