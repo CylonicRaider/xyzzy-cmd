@@ -114,14 +114,6 @@ int uhnode_addnote(struct uhnode *node, struct note *note) {
     return 0;
 }
 
-int uhnode_countnotes(const struct uhnode *node) {
-    struct note **n;
-    int ret = 0;
-    if (node->notes == NULL) return 0;
-    for (n = node->notes; *n; n++) ret++;
-    return ret;
-}
-
 struct note **uhnode_popnotes(struct uhnode *node) {
     struct note **ret = node->notes;
     node->notecap = 0;

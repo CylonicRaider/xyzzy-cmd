@@ -109,7 +109,7 @@ int server_handler(int fd, void *data) {
         node = userhash_make(data, sender);
         if (node == NULL) goto abort;
         memcpy(&cmd, buf + 1, sizeof(int));
-        count = uhnode_countnotes(node);
+        count = node->notelen;
         res = statusctl(&node->status, cmd);
         buf = realloc(buf, 1 + 2 * sizeof(int));
         if (buf == NULL) goto abort;
