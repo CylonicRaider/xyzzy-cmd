@@ -263,6 +263,7 @@ int main(int argc, char *argv[]) {
         userhash_init(&uh);
         if (server_spawn(argc, argv, &server_handler, &uh) == -1)
             goto exit_errno;
+        userhash_del(&uh);
         sockfd = client_connect();
         if (sockfd == -1)
             goto exit_errno;
