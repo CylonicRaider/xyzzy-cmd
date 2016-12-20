@@ -7,6 +7,7 @@
 static inline void frobrnd(uint32_t *state) {
     *state *= 1103515245;
     *state += 12345;
+    *state ^= *state >> 24;
 }
 
 static inline uint32_t frobks(uint32_t key) {
