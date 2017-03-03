@@ -8,6 +8,7 @@
 #include "xfile.h"
 
 #define BUFSIZE 4096
+#define LINESIZE 128
 
 #define _XPRINTF_ZPAD 1
 #define _XPRINTF_LEFT 2
@@ -156,6 +157,29 @@ int xfclose(XFILE *f) {
     }
     free(f);
     return ret;
+}
+
+ssize_t xgetline(XFILE *f, char **buf, size_t *buflen) {
+    ssize_t nread = 0;
+    if (*buf == NULL || *buflen < LINESIZE) {
+        *buflen = LINESIZE;
+        *buf = realloc(*buf, *buflen);
+        if (*buf == NULL) return -1;
+    }
+    for (;;) {
+        ssize_t rd;
+        char rdbuf[1];
+        if (nread == *buflen) {
+            *buflen *= 2;
+            *buf = realloc(*buf, *buflen);
+            if (*buf == NULL) return -1;
+        }
+        rd = xfread(f, rdbuf, sizeof(rdbuf));
+        if (rd == -1) return -1;
+        if (rd == 0) return (nread) ? nread : -2;
+        if (*rdbuf == '\n') return nread;
+        (*buf)[nread++] = *rdbuf;
+    }
 }
 
 int xputc(XFILE *f, int ch) {

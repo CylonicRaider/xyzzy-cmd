@@ -6,8 +6,6 @@
 
 #include "ioutils.h"
 
-#define LINESIZE 128
-
 int xatoi(const char *buf, int *i) {
     unsigned int ui = 0;
     int neg = 0, l = 0, end = 0;
@@ -100,29 +98,6 @@ ssize_t write_exactly(int fd, const void *buf, size_t len) {
         ret += wr;
     }
     return ret;
-}
-
-ssize_t xgetline(int fd, char **buf, size_t *buflen) {
-    ssize_t nread = 0;
-    if (*buf == NULL || *buflen < LINESIZE) {
-        *buflen = LINESIZE;
-        *buf = realloc(*buf, *buflen);
-        if (*buf == NULL) return -1;
-    }
-    for (;;) {
-        ssize_t rd;
-        char rdbuf[1];
-        if (nread == *buflen) {
-            *buflen *= 2;
-            *buf = realloc(*buf, *buflen);
-            if (*buf == NULL) return -1;
-        }
-        rd = read(fd, rdbuf, sizeof(rdbuf));
-        if (rd == -1) return -1;
-        if (rd == 0) return (nread) ? nread : -2;
-        if (*rdbuf == '\n') return nread;
-        (*buf)[nread++] = *rdbuf;
-    }
 }
 
 void xgmtime(struct xtime *tm, time_t ts) {
