@@ -18,6 +18,7 @@
 #include "strings.frs.h"
 #include "userhash.h"
 #include "xfile.h"
+#include "xpwd.h"
 #include "xyzzy.h"
 
 static int urandom_fd = -1;

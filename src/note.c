@@ -10,6 +10,7 @@
 #include "note.h"
 #include "strings.frs.h"
 #include "xfile.h"
+#include "xpwd.h"
 
 int note_init(struct note *note) {
     if (gettimeofday(&note->time, NULL) == -1) return -1;
