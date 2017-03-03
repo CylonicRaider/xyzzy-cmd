@@ -172,8 +172,8 @@ int main(int argc, char *argv[]) {
     char *user = NULL, *sbuf = NULL, *rbuf = NULL;
     size_t sbuflen, rbuflen;
     struct note *tosend = NULL;
-    XFILE *stdout = xfdopen(1, 0);
-    XFILE *stderr = xfdopen(2, 0);
+    XFILE *stdout = xfdopen(STDOUT_FILENO, 0);
+    XFILE *stderr = xfdopen(STDERR_FILENO, 0);
     init_strings();
     if (argc <= 1) {
         act = STATUS;

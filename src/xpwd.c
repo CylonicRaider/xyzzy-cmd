@@ -58,6 +58,6 @@ int xgetpwent(struct xpwd *pwd, uid_t uid, char *name) {
     errno = 0;
     end:
         free(line);
-        close(fd);
+        xfclose(file);
         return ret;
 }
