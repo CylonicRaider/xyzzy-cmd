@@ -24,6 +24,7 @@ void prepare_address(struct sockaddr_un *addr, socklen_t *addrlen) {
 ssize_t recv_message(int fd, struct message *msg, int flags) {
     char recvbuf[8], *recvptr;
     ssize_t ret, rd;
+    uint32_t key;
     if (flags & ~_COMM_MASK) {
         errno = EINVAL;
         return -1;
@@ -62,9 +63,12 @@ ssize_t recv_message(int fd, struct message *msg, int flags) {
         errno = EBADMSG;
         return -1;
     }
+
     // Workaround for strict aliasing rules.
     recvptr = recvbuf;
     msg->key = ntohl(((union intcast *) recvptr)[0].num);
+    key = frobks(msg->key);
+    defrobr(&key, recvbuf + 4, recvbuf + 4, 4);
     msg->length = ntohl(((union intcast *) recvptr)[1].num);
     if (msg->length == 0) {
         free(msg->data);
@@ -79,7 +83,7 @@ ssize_t recv_message(int fd, struct message *msg, int flags) {
             return -1;
         }
         if (! (flags & COMM_NOSCRAMBLE))
-            defrobl(msg->key, msg->data, msg->data, msg->length);
+            defrobr(&key, msg->data, msg->data, msg->length);
     }
     return ret;
 }
@@ -89,6 +93,7 @@ ssize_t send_message(int fd, const struct message *msg, int flags) {
     struct iovec bufdesc;
     struct msghdr hdr = { NULL, 0, &bufdesc, 1, ancbuf, 0, 0 };
     ssize_t ret = -1, wr;
+    uint32_t key;
     if (flags & ~_COMM_MASK) {
         errno = EINVAL;
         return -1;
@@ -97,10 +102,12 @@ ssize_t send_message(int fd, const struct message *msg, int flags) {
     bufdesc.iov_base = malloc(bufdesc.iov_len);
     if (bufdesc.iov_base == NULL) return -1;
     ((union intcast *) bufdesc.iov_base)[0].num = htonl(msg->key);
+    key = frobks(msg->key);
     ((union intcast *) bufdesc.iov_base)[1].num = htonl(msg->length);
+    frobr(&key, bufdesc.iov_base + 4, bufdesc.iov_base + 4, 4);
     memcpy(bufdesc.iov_base + 8, msg->data, msg->length);
     if (! (flags & COMM_NOSCRAMBLE))
-        frobl(msg->key, bufdesc.iov_base + 8, bufdesc.iov_base + 8,
+        frobr(&key, bufdesc.iov_base + 8, bufdesc.iov_base + 8,
               msg->length);
     if (flags & COMM_PEERAUTH) {
         // Assuming the system calls are infallible
