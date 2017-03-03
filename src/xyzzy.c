@@ -183,6 +183,7 @@ int main(int argc, char *argv[]) {
             argv[1] = argv[2];
         } else {
             xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
+            xfflush(stderr);
             return 0;
         }
     } else if (argc >= 3 && strcmp(argv[2], cmd_help) == 0) {
@@ -224,9 +225,11 @@ int main(int argc, char *argv[]) {
         struct note *n = note_read(0, NULL);
         note_print(stdout, n);
         free(n);
-        goto end;
+        xfflush(stdout);
+        return 0;
     } else {
         xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
+        xfflush(stderr);
         return 1;
     }
     if (act == USAGE || act == USAGE_OK) {
@@ -245,6 +248,7 @@ int main(int argc, char *argv[]) {
             xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
             act = USAGE;
         }
+        xfflush(stderr);
         return (act == USAGE_OK) ? 0 : 1;
     } else if (act == XYZZY) {
         return -42;
@@ -365,8 +369,8 @@ int main(int argc, char *argv[]) {
     exit_errno:
         ret = EXIT_ERRNO;
     end:
-        xfclose(stdout);
-        xfclose(stderr);
+        xfflush(stdout);
+        xfflush(stderr);
         free(sbuf);
         free(rbuf);
         free(tosend);
