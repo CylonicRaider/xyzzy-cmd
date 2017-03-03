@@ -222,12 +222,6 @@ int main(int argc, char *argv[]) {
         act = (argc == 2) ? PONG : USAGE;
     } else if (strcmp(argv[1], PROGNAME) == 0) {
         act = (argc == 2) ? XYZZY : USAGE;
-    } else if (strcmp(argv[1], "-t") == 0) {
-        struct note *n = note_read(0, NULL);
-        note_print(stdout, n);
-        free(n);
-        xfflush(stdout);
-        return 0;
     } else {
         xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
         xfflush(stderr);
