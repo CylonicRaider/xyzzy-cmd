@@ -17,6 +17,7 @@
 #include "status.h"
 #include "strings.frs.h"
 #include "userhash.h"
+#include "xfile.h"
 #include "xyzzy.h"
 
 static int urandom_fd = -1;
@@ -217,6 +218,11 @@ int main(int argc, char *argv[]) {
         act = (argc == 2) ? PONG : USAGE;
     } else if (strcmp(argv[1], PROGNAME) == 0) {
         act = (argc == 2) ? XYZZY : USAGE;
+    } else if (strcmp(argv[1], "-t") == 0) {
+        struct note *n = note_read(0, NULL);
+        note_print(1, n);
+        free(n);
+        return 0;
     } else {
         xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
         return 1;
