@@ -1,5 +1,6 @@
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -7,6 +8,9 @@
 #include "xfile.h"
 
 #define BUFSIZE 4096
+
+#define _XPRINTF_ZPAD 1
+#define _XPRINTF_LEFT 2
 
 static inline int fbuf_init(struct fbuf *buf) {
     buf->data = malloc(BUFSIZE);
@@ -150,4 +154,86 @@ int xfclose(XFILE *f) {
     }
     free(f);
     return ret;
+}
+
+int xputc(XFILE *f, int ch) {
+    char buf[1] = { ch };
+    if (xfwrite(f, buf, 1) == -1) return -1;
+    return ch;
+}
+
+ssize_t xputs(XFILE *f, const char *s) {
+    return xfwrite(f, s, strlen(s));
+}
+
+ssize_t xprintf(XFILE *f, const char *fmt, ...) {
+    size_t written = 0;
+    char numbuf[INT_SPACE];
+    va_list ap;
+    va_start(ap, fmt);
+    while (*fmt) {
+        int length, flags;
+        char conv, *output;
+        size_t outputlen;
+        const char *oldfmt = fmt;
+        while (*fmt && *fmt != '%') fmt++;
+        if (fmt != oldfmt) {
+            outputlen = fmt - oldfmt;
+            if (xfwrite(f, oldfmt, outputlen) != outputlen)
+                return -1;
+            written++;
+        }
+        if (! *fmt) break;
+        length = 0, flags = 0, conv = 0;
+        while (*++fmt) {
+            if (('1' <= *fmt && *fmt <= '9') || (length && *fmt == '0')) {
+                length = (length * 10) + (*fmt - '0');
+            } else if (*fmt == '0') {
+                flags |= _XPRINTF_ZPAD;
+            } else if (*fmt == '-' && ! length) {
+                flags |= _XPRINTF_LEFT;
+            } else if (*fmt == 's' || *fmt == 'd' || *fmt == '%') {
+                conv = *fmt++;
+                break;
+            } else {
+                errno = EINVAL;
+                return -1;
+            }
+        }
+        if (conv == 0) {
+            errno = EINVAL;
+            return -1;
+        }
+        if (conv == 's') {
+            output = va_arg(ap, char *);
+        } else if (conv == 'd') {
+            int val = va_arg(ap, int);
+            xitoa(numbuf, val);
+            output = numbuf;
+        } else {
+            output = "%";
+        }
+        outputlen = strlen(output);
+        if (outputlen >= length) {
+            written += outputlen;
+            if (xputs(f, output) == -1) return -1;
+        } else if (flags & _XPRINTF_LEFT) {
+            written += length;
+            if (xputs(f, output) == -1) return -1;
+            for (; outputlen < length; length--)
+                if (xputc(f, ' ') == -1) return -1;
+        } else if (flags & _XPRINTF_ZPAD) {
+            written += length;
+            for (; outputlen < length; length--)
+                if (xputc(f, '0') == -1) return -1;
+            if (xputs(f, output) == -1) return -1;
+        } else {
+            written += length;
+            for (; outputlen < length; length--)
+                if (xputc(f, ' ') == -1) return -1;
+            if (xputs(f, output) == -1) return -1;
+        }
+    }
+    va_end(ap);
+    return written;
 }

@@ -47,25 +47,6 @@ ssize_t read_exactly(int fd, void *buf, size_t len);
  * If len is zero, this returns instant success. */
 ssize_t write_exactly(int fd, const void *buf, size_t len);
 
-/* Write the given character to the given file descriptor
- * Returns the character written, or -1 on error (having errno set). */
-int xputc(int fd, int ch);
-
-/* Write the given string to the given file descriptor
- * Returns analogously to write_exactly(). */
-ssize_t xputs(int fd, const char *string);
-
-/* Write result of formatting fmt with additional arguments to stream
- * Returns the amount of bytes written on success, or -1 on error, setting
- * errno appropriately.
- * Supported format specifiers:
- * %d -- int
- * %s -- char *
- * %% -- Percent sign
- * The space and minus flags and a field width are supported.
- * Who needs more? */
-ssize_t xprintf(int fd, const char *fmt, ...);
-
 /* Read a whole line from the given stream
  * The given buffer *buf (with size buflen) is dynamically reallocated as
  * necessary; it is in particular left up to the caller to free() it.

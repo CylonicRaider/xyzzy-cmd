@@ -2,7 +2,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,9 +9,6 @@
 #include "strings.frs.h"
 
 #define LINESIZE 128
-
-#define _XPRINTF_ZPAD 1
-#define _XPRINTF_LEFT 2
 
 int xatoi(const char *buf, int *i) {
     unsigned int ui = 0;
@@ -106,88 +102,6 @@ ssize_t write_exactly(int fd, const void *buf, size_t len) {
         ret += wr;
     }
     return ret;
-}
-
-int xputc(int fd, int ch) {
-    char buf[1] = { ch };
-    if (write_exactly(fd, buf, 1) == -1) return -1;
-    return ch;
-}
-
-ssize_t xputs(int fd, const char *string) {
-    return write_exactly(fd, string, strlen(string));
-}
-
-ssize_t xprintf(int fd, const char *fmt, ...) {
-    size_t written = 0;
-    char numbuf[INT_SPACE];
-    va_list ap;
-    va_start(ap, fmt);
-    while (*fmt) {
-        int length, flags;
-        char conv, *output;
-        size_t outputlen;
-        const char *oldfmt = fmt;
-        while (*fmt && *fmt != '%') fmt++;
-        if (fmt != oldfmt) {
-            outputlen = fmt - oldfmt;
-            if (write_exactly(fd, oldfmt, outputlen) != outputlen)
-                return -1;
-            written++;
-        }
-        if (! *fmt) break;
-        length = 0, flags = 0, conv = 0;
-        while (*++fmt) {
-            if (('1' <= *fmt && *fmt <= '9') || (length && *fmt == '0')) {
-                length = (length * 10) + (*fmt - '0');
-            } else if (*fmt == '0') {
-                flags |= _XPRINTF_ZPAD;
-            } else if (*fmt == '-' && ! length) {
-                flags |= _XPRINTF_LEFT;
-            } else if (*fmt == 's' || *fmt == 'd' || *fmt == '%') {
-                conv = *fmt++;
-                break;
-            } else {
-                errno = EINVAL;
-                return -1;
-            }
-        }
-        if (conv == 0) {
-            errno = EINVAL;
-            return -1;
-        }
-        if (conv == 's') {
-            output = va_arg(ap, char *);
-        } else if (conv == 'd') {
-            int val = va_arg(ap, int);
-            xitoa(numbuf, val);
-            output = numbuf;
-        } else {
-            output = "%";
-        }
-        outputlen = strlen(output);
-        if (outputlen >= length) {
-            written += outputlen;
-            if (xputs(fd, output) == -1) return -1;
-        } else if (flags & _XPRINTF_LEFT) {
-            written += length;
-            if (xputs(fd, output) == -1) return -1;
-            for (; outputlen < length; length--)
-                if (xputc(fd, ' ') == -1) return -1;
-        } else if (flags & _XPRINTF_ZPAD) {
-            written += length;
-            for (; outputlen < length; length--)
-                if (xputc(fd, '0') == -1) return -1;
-            if (xputs(fd, output) == -1) return -1;
-        } else {
-            written += length;
-            for (; outputlen < length; length--)
-                if (xputc(fd, ' ') == -1) return -1;
-            if (xputs(fd, output) == -1) return -1;
-        }
-    }
-    va_end(ap);
-    return written;
 }
 
 ssize_t xgetline(int fd, char **buf, size_t *buflen) {

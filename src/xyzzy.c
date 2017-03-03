@@ -171,6 +171,8 @@ int main(int argc, char *argv[]) {
     char *user = NULL, *sbuf = NULL, *rbuf = NULL;
     size_t sbuflen, rbuflen;
     struct note *tosend = NULL;
+    XFILE *stdout = xfdopen(1, 0);
+    XFILE *stderr = xfdopen(2, 0);
     init_strings();
     if (argc <= 1) {
         act = STATUS;
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
             act = USAGE;
             argv[1] = argv[2];
         } else {
-            xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
+            xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
             return 0;
         }
     } else if (argc >= 3 && strcmp(argv[2], cmd_help) == 0) {
@@ -220,11 +222,11 @@ int main(int argc, char *argv[]) {
         act = (argc == 2) ? XYZZY : USAGE;
     } else if (strcmp(argv[1], "-t") == 0) {
         struct note *n = note_read(0, NULL);
-        note_print(1, n);
+        note_print(stdout, n);
         free(n);
         return 0;
     } else {
-        xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
+        xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
         return 1;
     }
     if (act == USAGE || act == USAGE_OK) {
@@ -233,14 +235,14 @@ int main(int argc, char *argv[]) {
                 strcmp(argv[1], cmd_ping) == 0 ||
                 strcmp(argv[1], cmd_pong) == 0 ||
                 strcmp(argv[1], PROGNAME) == 0) {
-            xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, argv[1]);
+            xprintf(stderr, usage_tmpl, PROGNAME, argv[1]);
         } else if (strcmp(argv[1], cmd_on) == 0 ||
                 strcmp(argv[1], cmd_off) == 0) {
-            xprintf(STDERR_FILENO, usage_onoff, PROGNAME, argv[1]);
+            xprintf(stderr, usage_onoff, PROGNAME, argv[1]);
         } else if (strcmp(argv[1], cmd_write) == 0) {
-            xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_write);
+            xprintf(stderr, usage_tmpl, PROGNAME, usage_write);
         } else {
-            xprintf(STDERR_FILENO, usage_tmpl, PROGNAME, usage_list);
+            xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
             act = USAGE;
         }
         return (act == USAGE_OK) ? 0 : 1;
@@ -255,7 +257,7 @@ int main(int argc, char *argv[]) {
             pwres = xgetpwent(&pw, uid, NULL);
         }
         if (pwres == -1) {
-            if (errno == 0) xprintf(STDOUT_FILENO, error_nouser, user);
+            if (errno == 0) xprintf(stdout, error_nouser, user);
             goto exit_errno;
         }
         tosend = note_read(STDIN_FILENO, NULL);
@@ -284,9 +286,9 @@ int main(int argc, char *argv[]) {
             goto exit_errno;
         if (rbuflen == 0 || *rbuf != RSP_PING) goto oops;
         if (act == PING) {
-            xprintf(STDOUT_FILENO, msg_pingpong, cmd_pong);
+            xprintf(stdout, msg_pingpong, cmd_pong);
         } else {
-            xprintf(STDOUT_FILENO, msg_pingpong, cmd_ping);
+            xprintf(stdout, msg_pingpong, cmd_ping);
         }
     } else if (act == STATUS) {
         int rsp, count;
@@ -302,16 +304,16 @@ int main(int argc, char *argv[]) {
         memcpy(&count, rbuf + 1 + sizeof(int), sizeof(int));
         if (rsp < 0) {
             if (rsp != STATUSRES_AGAIN) goto oops;
-            xprintf(STDERR_FILENO, msg_sure);
+            xprintf(stderr, msg_sure);
             ret = 2;
             goto end;
         } else if (subact != 0) {
             /* NOP */
         } else if (count) {
-            xprintf(STDOUT_FILENO, msg_status_cnt, (rsp & STATUS_ENABLED) ?
+            xprintf(stdout, msg_status_cnt, (rsp & STATUS_ENABLED) ?
                     cmd_on : cmd_off, count);
         } else {
-            xprintf(STDOUT_FILENO, msg_status, (rsp & STATUS_ENABLED) ?
+            xprintf(stdout, msg_status, (rsp & STATUS_ENABLED) ?
                     cmd_on : cmd_off);
         }
     } else if (act == READ) {
@@ -328,9 +330,9 @@ int main(int argc, char *argv[]) {
             goto exit_errno;
         }
         for (p = notes; *p; p++) {
-            if (p != notes && xputc(STDOUT_FILENO, '\n') == -1)
+            if (p != notes && xputc(stdout, '\n') == -1)
                 goto notes_abort;
-            if (note_print(STDOUT_FILENO, *p) == -1)
+            if (note_print(stdout, *p) == -1)
                 goto notes_abort;
             free(*p);
         }
@@ -357,12 +359,14 @@ int main(int argc, char *argv[]) {
     ret = 0;
     goto end;
     oops:
-        xprintf(STDERR_FILENO, msg_oops);
+        xprintf(stderr, msg_oops);
         ret = 62;
         goto end;
     exit_errno:
         ret = EXIT_ERRNO;
     end:
+        xfclose(stdout);
+        xfclose(stderr);
         free(sbuf);
         free(rbuf);
         free(tosend);

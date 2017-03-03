@@ -61,4 +61,23 @@ int xfflush(XFILE *f);
  * requested) to avoid race conditions. */
 int xfclose(XFILE *f);
 
+/* Write the given character to the given file descriptor
+ * Returns the character written, or -1 on error (having errno set). */
+int xputc(XFILE *f, int ch);
+
+/* Write the given NUL-terminated string to f
+ * Shortcut for xfwrite(f, s, strlen(s)); */
+ssize_t xputs(XFILE *f, const char *s);
+
+/* Write result of formatting fmt with additional arguments to stream
+ * Returns the amount of bytes written on success, or -1 on error, setting
+ * errno appropriately.
+ * Supported format specifiers:
+ * %d -- int
+ * %s -- char *
+ * %% -- Percent sign
+ * The space and minus flags and a field width are supported.
+ * Who needs more? */
+ssize_t xprintf(XFILE *f, const char *fmt, ...);
+
 #endif

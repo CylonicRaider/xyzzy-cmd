@@ -9,6 +9,7 @@
 #include "ioutils.h"
 #include "note.h"
 #include "strings.frs.h"
+#include "xfile.h"
 
 int note_init(struct note *note) {
     if (gettimeofday(&note->time, NULL) == -1) return -1;
@@ -48,7 +49,7 @@ struct note *note_read(int fd, struct note *note) {
         return NULL;
 }
 
-int note_print(int fd, const struct note *note) {
+int note_print(XFILE *f, const struct note *note) {
     struct xtime tm;
     struct xpwd pwd;
     size_t len;
@@ -57,16 +58,16 @@ int note_print(int fd, const struct note *note) {
         strcpy(pwd.name, "???");
     }
     xgmtime(&tm, note->time.tv_sec);
-    if (xprintf(fd, note_header, pwd.name, (int) note->sender,
+    if (xprintf(f, note_header, pwd.name, (int) note->sender,
                 (int) tm.year, (int) tm.month, (int) tm.day,
                 (int) tm.hour, (int) tm.minute, (int) tm.second,
                 (int) note->time.tv_usec, (int) note->length) == -1)
         return -1;
     len = note->length;
     if (len && note->content[len - 1] == '\n') len--;
-    if (write_exactly(fd, note->content, len) != len)
+    if (xfwrite(f, note->content, len) != len)
         return -1;
-    if (xputs(fd, note_footer) == -1)
+    if (xputs(f, note_footer) == -1)
         return -1;
     return 0;
 }

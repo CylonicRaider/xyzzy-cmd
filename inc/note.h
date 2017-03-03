@@ -6,6 +6,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "xfile.h"
+
 #define NOTE_SIZE(n) (offsetof(struct note, content) + (n)->length)
 
 struct note {
@@ -26,7 +28,7 @@ int note_init(struct note *note);
 struct note *note_read(int fd, struct note *note);
 
 /* Write a human-readable representation of the note to a file descriptor */
-int note_print(int fd, const struct note *note);
+int note_print(XFILE *f, const struct note *note);
 
 /* Pack a list of notes into the given structure
  * buf is realloc()-ed as necessary, and may be NULL, the new value is
