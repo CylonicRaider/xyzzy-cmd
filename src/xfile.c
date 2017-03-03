@@ -38,8 +38,10 @@ static inline size_t fbuf_insert(struct fbuf *buf, const char *data,
                                  size_t len) {
     char *end = buf->data + buf->begin + buf->len;
     size_t rem = buf->cap - buf->begin - buf->len;
-    memcpy(end, data, rem);
-    return rem;
+    if (len > rem) len = rem;
+    memcpy(end, data, len);
+    buf->len += len;
+    return len;
 }
 static inline ssize_t fbuf_read(struct fbuf *buf, int fd) {
     char *end = buf->data + buf->begin + buf->len;

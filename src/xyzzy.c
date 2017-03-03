@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
         struct note *n = note_read(0, NULL);
         note_print(stdout, n);
         free(n);
-        return 0;
+        goto end;
     } else {
         xprintf(stderr, usage_tmpl, PROGNAME, usage_list);
         return 1;
