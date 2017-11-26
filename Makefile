@@ -1,14 +1,10 @@
 
 CC = gcc
-LD = gcc
 STRIP = strip
 
 # Choose libc
-ifneq ($(strip $(GLIBC)),)
-    CFLAGS = -O2 -g -std=c99 -Wall -Werror -Iinc
-    LDFLAGS =
-else
-    KLIBC = /usr/lib/klibc
+#KLIBC = /usr/lib/klibc
+ifneq ($(strip $(KLIBC)),)
     # The -iwithprefix apparently magically adds the GCC include directory
     # into the path.
     CFLAGS = -O2 -g -std=c99 -flto -Wall -Werror -D__KLIBC__ -D_BITSIZE=64 \
@@ -17,6 +13,11 @@ else
         -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables
     LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
         $(KLIBC)/lib/crt0.o -lc -Wl,--gc-sections
+    STRIPFLAGS = -s -R '.note*' -R '.comment*'
+else
+    CFLAGS = -O2 -g -std=c99 -Wall -Werror -Iinc
+    LDFLAGS =
+    STRIPFLAGS =
 endif
 
 # Kbuild-like messages
@@ -35,11 +36,11 @@ endif
 
 xyzzy: build/xyzzy-full
 	$(I)echo "  STRIP   $@"
-	$(Q)$(STRIP) -s -R '.note*' -R '.comment*' -o $@ $<
+	$(Q)$(STRIP) $(STRIPFLAGS) -o $@ $<
 
 frobnicate build/xyzzy-full:
-	$(I)echo "  LD      $@"
-	$(Q)$(LD) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(I)echo "  CCLD    $@"
+	$(Q)$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 build:
 	$(I)echo "  MKDIR   $@"

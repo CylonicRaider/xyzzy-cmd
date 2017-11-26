@@ -2,6 +2,7 @@
 #ifndef _IOUTILS_H
 #define _IOUTILS_H
 
+#include <limits.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
