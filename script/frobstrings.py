@@ -176,12 +176,12 @@ def main():
                 sys.stderr.write('USAGE: %s [--help] [-o outfile] '
                                  '[-h hdrfile] [-l keylen] [infile]\n' %
                                  sys.argv[0])
-                sys.stderr.write('If outfile or infile are "-" or missing, '
-                                 'standard streams are used. If hdrfile '
-                                 'is "-", standard output is written, if '
-                                 'omitted, no header file is written at '
-                                 'all. If outfile and hdrfile are "-", '
-                                 'a huge mess is the result.\n')
+                sys.stderr.write(
+                    'If outfile or infile are "-" or missing, standard '
+                    'streams are used. If hdrfile is "-", standard output '
+                    'is written, if omitted, no header file is written at '
+                    'all. If outfile and hdrfile are "-", a huge mess is '
+                    'written to standard output.\n')
                 raise SystemExit
             elif arg == '-o':
                 outfile = next(it)
