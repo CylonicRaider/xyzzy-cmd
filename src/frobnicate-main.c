@@ -16,7 +16,7 @@ union numbuf {
 
 char _frobkey[FROBKEYLEN];
 
-/* Frobnicate uint32_t-key-uint32_t-length-and-prefixed strings from stdin to
+/* Frobnicate uint32_t-key-and-uint32_t-length-prefixed strings from stdin to
  * stdout */
 int main(int argc, char *argv[]) {
     char *buf = NULL;

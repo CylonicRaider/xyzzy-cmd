@@ -88,7 +88,7 @@ ssize_t xputs(XFILE *f, const char *s);
  * %d -- int
  * %s -- char *
  * %% -- Percent sign
- * The space and minus flags and a field width are supported.
+ * The zero and minus flags and a field width are supported.
  * Who needs more? */
 ssize_t xprintf(XFILE *f, const char *fmt, ...);
 
