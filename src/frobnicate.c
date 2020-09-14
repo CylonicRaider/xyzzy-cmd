@@ -25,7 +25,7 @@ static inline uint32_t _frobks(uint32_t key) {
 }
 
 static inline size_t _frobr(uint32_t *key, const char *src, char *dest,
-                            size_t l) {
+                            ssize_t l) {
     size_t ret;
     uint32_t k = *key;
     for (ret = 0; ret != l; ret++) {
@@ -40,7 +40,7 @@ static inline size_t _frobr(uint32_t *key, const char *src, char *dest,
 }
 
 static inline size_t _defrobr(uint32_t *key, const char *src, char *dest,
-                              size_t l) {
+                              ssize_t l) {
     size_t ret;
     uint32_t k = *key;
     for (ret = 0; ret != l; ret++) {
@@ -57,11 +57,11 @@ uint32_t frobks(uint32_t key) {
     return _frobks(key);
 }
 
-size_t frobr(uint32_t *key, const char *src, char *dest, size_t l) {
+size_t frobr(uint32_t *key, const char *src, char *dest, ssize_t l) {
     return _frobr(key, src, dest, l);
 }
 
-size_t defrobr(uint32_t *key, const char *src, char *dest, size_t l) {
+size_t defrobr(uint32_t *key, const char *src, char *dest, ssize_t l) {
     return _defrobr(key, src, dest, l);
 }
 

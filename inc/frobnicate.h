@@ -4,6 +4,7 @@
 
 #include <inttypes.h>
 #include <stddef.h>
+#include <sys/types.h>
 
 #define FROBKEYLEN 8
 
@@ -15,10 +16,10 @@ uint32_t frobks(uint32_t key);
 /* Scramble the given memory block without performing the key schedule
  * If l is negative, frobnication is done until a NUL byte is encountered in
  * the plaintext. The amount of bytes actually scrambled is returned. */
-size_t frobr(uint32_t *key, const char *src, char *dest, size_t l);
+size_t frobr(uint32_t *key, const char *src, char *dest, ssize_t l);
 
 /* Descramble the given memory block without performing the key schedule */
-size_t defrobr(uint32_t *key, const char *src, char *dest, size_t l);
+size_t defrobr(uint32_t *key, const char *src, char *dest, ssize_t l);
 
 /* Scramble the given string */
 void frob(uint32_t key, const char *src, char *dest);
