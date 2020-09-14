@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
         sbuf[0] = CMD_PING;
         if (do_request(sockfd, sbuf, 1, &rbuf, &rbuflen) == -1)
             goto exit_errno;
-        if (rbuflen == 0 || *rbuf != RSP_PING) goto oops;
+        if (rbuflen == 0 || *rbuf != (char) RSP_PING) goto oops;
         if (act == PING) {
             xprintf(stdout, msg_pingpong, cmd_pong);
         } else {
@@ -298,7 +298,8 @@ int main(int argc, char *argv[]) {
         memcpy(sbuf + 1, &subact, sizeof(int));
         if (do_request(sockfd, sbuf, 1 + sizeof(int), &rbuf, &rbuflen) == -1)
             goto exit_errno;
-        if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != RSP_STATUS) goto oops;
+        if (rbuflen != 1 + sizeof(int) * 2 || *rbuf != (char) RSP_STATUS)
+            goto oops;
         memcpy(&rsp, rbuf + 1, sizeof(int));
         memcpy(&count, rbuf + 1 + sizeof(int), sizeof(int));
         if (rsp < 0) {
@@ -322,7 +323,7 @@ int main(int argc, char *argv[]) {
         sbuf[0] = CMD_READ;
         if (do_request(sockfd, sbuf, 1, &rbuf, &rbuflen) == -1)
             goto exit_errno;
-        if (rbuflen == 0 || *rbuf != RSP_READ) goto oops;
+        if (rbuflen == 0 || *rbuf != (char) RSP_READ) goto oops;
         notes = note_unpack(rbuf + 1, rbuflen - 1, NULL);
         if (notes == NULL) {
             if (errno == EBADMSG) goto oops;
@@ -350,7 +351,7 @@ int main(int argc, char *argv[]) {
         memcpy(sbuf + 1, tosend, NOTE_SIZE(tosend));
         if (do_request(sockfd, sbuf, sbuflen, &rbuf, &rbuflen) == -1)
             goto exit_errno;
-        if (rbuflen != 1 || *rbuf != RSP_WRITE) goto oops;
+        if (rbuflen != 1 || *rbuf != (char) RSP_WRITE) goto oops;
         /* NOP */
     } else {
         goto oops;
