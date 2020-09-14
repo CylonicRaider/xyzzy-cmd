@@ -1,24 +1,10 @@
 
-CC = gcc
 STRIP = strip
 
-# Choose libc
-#KLIBC = /usr/lib/klibc
-ifneq ($(strip $(KLIBC)),)
-    # The -iwithprefix apparently magically adds the GCC include directory
-    # into the path.
-    CFLAGS = -O2 -g -std=c99 -flto -Wall -Werror -D__KLIBC__ -D_BITSIZE=64 \
-        -iwithprefix include -nostdinc -I$(KLIBC)/include/bits64 \
-        -I$(KLIBC)/include/arch/x86_64 -I$(KLIBC)/include -Iinc \
-        -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables
-    LDFLAGS = -fwhole-program -nostdlib -static -L$(KLIBC)/lib \
-        $(KLIBC)/lib/crt0.o -lc -Wl,--gc-sections
-    STRIPFLAGS = -s -R '.note*' -R '.comment*'
-else
-    CFLAGS = -O2 -g -std=c99 -Wall -Werror -Iinc
-    LDFLAGS =
-    STRIPFLAGS =
-endif
+# We recommend building against the klibc, by using its "klcc" script as CC.
+CFLAGS = -Iinc -std=c99 -Wall -Werror -O2 -g -fno-asynchronous-unwind-tables
+LDFLAGS = -static
+STRIPFLAGS = -s -R '.note*' -R '.comment*'
 
 # Kbuild-like messages
 ifneq ($(strip $(V)),)
