@@ -252,8 +252,8 @@ def main():
                     raise SystemExit('Bad listdef pragma')
                 elif listtype is None:
                     raise SystemExit('listdef pragma without listdecl!')
-                writehdr('struct %s %s[%s];' % (listtype, parts[1],
-                                                len(names) + 1))
+                writehdr('extern struct %s %s[%s];' % (listtype, parts[1],
+                                                       len(names) + 1))
                 writeout('struct %s %s[%s] = {' % (listtype, parts[1],
                                                    len(names) + 1))
                 if listkeys:
@@ -322,8 +322,8 @@ def main():
             nk, ns = read_pkt(proc.stdout)
             if hdrstream:
                 if not listkeys or not listtype:
-                    writehdr('%s %s_key;'  % (keytype, n))
-                writehdr('%s %s[%s];' % (chartype, n, len(s)))
+                    writehdr('extern %s %s_key;'  % (keytype, n))
+                writehdr('extern %s %s[%s];' % (chartype, n, len(s)))
             if not listkeys or not listtype:
                 writeout('%s %s_key = 0x%x;' % (keytype, n, nk))
             writeout('%s %s[%s] = %s;' % (chartype, n, len(s),
